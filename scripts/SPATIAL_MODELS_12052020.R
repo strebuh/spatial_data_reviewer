@@ -65,9 +65,11 @@ for(i in c(1:ncol(X))){
 grid.arrange(grobs = gs, nrow=round(sqrt(ncol(X))),0)
 
 
+
 #OLS model
 OLS_1<-lm(flats_prices ~., 
         data=X)
+summary(OLS_1)
 
 #MANSKI MODEL
 GNS_1<-sacsarlm(flats_prices ~., 
@@ -165,5 +167,30 @@ cols<-c("steelblue4","lightskyblue","thistle1","plum3")
 res<-GNS_1$residuals
 plot(X, col=cols[findInterval(res,brks)])
 plot(X, add=TRUE, lwd=2)
-title(main="Residuals from spatial model")
-#legend("bottomleft", legend=c("<mean-sd", "(mean-sd, mean)", "(mean, mean+sd)", ">mean+sd"), leglabs(brks1), fill=cols, bty="n")
+title(main="Residuals from GNS model")
+
+res<-SAR_1$residuals
+plot(X, col=cols[findInterval(res,brks)])
+plot(X, add=TRUE, lwd=2)
+title(main="Residuals from SAR model")
+
+SRMSE<-function(model, dataset) { sqrt(sum((model$fitted.values-dataset$flats_prices)^2)/ dim(dataset)[1]) / (mean(dataset$flats_prices))}
+
+models<-c("OLS_1", "GNS_1", "SDM_1", "SDEM_1", "SAC_1", "SAR_1", "SEM_1", "SLX_1")
+SRMSE.all<-matrix(0)
+for(i in 1:8){
+  SRMSE.all[i]<-SRMSE(get(models[i]), X)}
+SRMSE.all
+
+models<-c("GNS", "SDM", "SDEM", "SAC", "SAR", "SEM", "SLX", "OLS")
+SRMSE.df=data.frame(models=models,SRMSE=SRMSE.all[c(2:8,1)])
+SRMSE.df$models = factor(SRMSE.df$models,levels=SRMSE.df$models)
+
+ggplot(SRMSE.df) +
+  aes(x = models, y = SRMSE,
+      fill=factor(ifelse(models=="GNS","Highlighted","Normal"))) +
+  geom_col() + 
+  labs(title='SRMSE for different distances',x="models", y="SRMSE") +
+  coord_cartesian(ylim=c(min(SRMSE.df$SRMSE)-0.01,max(SRMSE.df$SRMSE)+0.01)) +
+  geom_text(aes(label = round(SRMSE,4)),position = position_stack(1)) +
+  theme(legend.position='None')

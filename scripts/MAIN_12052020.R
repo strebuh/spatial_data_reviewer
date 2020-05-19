@@ -176,10 +176,3 @@ vars = find_best_predictors(data_2018[,c(5:41,56:82)],
                             "Mediana_cen_za_1_m2_lokali_mieszkalnych_sprzedanych_w_ramach_transakcji_rynkowych_rynek_wtorny_ogolem_zl")
 vars
 
-#vars = append("Kod",vars)
-#vars = append(vars,"Mediana_cen_za_1_m2_lokali_mieszkalnych_sprzedanych_w_ramach_transakcji_rynkowych_rynek_wtorny_ogolem_zl")
-#vars = append(vars,"rok")
-
-#source("PREPARE_DATA_12052020.R")
-#data_model_2018 = prepare_data(data,2018,vars)
-
