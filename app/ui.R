@@ -19,9 +19,8 @@ shinyUI(fluidPage(
                                      uiOutput("variableOutput"),
                                      
                                      # choice of voivodship
-                                     selectInput("selectArea", "Area",
-                                                 choices = c("Polska", "mazowieckie", "dolnośląskie", "lubelskie")),
-                                     
+                                     uiOutput("areaOutput"),
+
                                      # choice of whether single year or time span
                                      radioButtons("periodType", label = h2("Period Span"),
                                                   choices = list("Single Yaar" = 0, "Multiple Years" = 1), 
@@ -34,18 +33,18 @@ shinyUI(fluidPage(
                                                       uiOutput("yearsOutput")),
                                      hr(),
                                      # apply filters to prepare data statistics
-                                     actionButton("dataInput",label = "Update filters")
+                                     actionButton("filterAction",label = "Update filters")
                         ),
                         
                         mainPanel(
-                          column(9, 
-                                 plotlyOutput("plot1", width = 800, height=700),
+                          column(9,
+                                 DT::dataTableOutput("dataOutput")
+ 
+                                 # plotlyOutput("plot1", width = 800, height=700),
+                                 # hr(),
+                                 # p("Some text at the bottom - maybe will be deleted.",
+                                 #   style = "font-size:15px")
                                  
-                                 
-                                 
-                                 hr(),
-                                 p("Some text at the bottom - maybe will be deleted.",
-                                   style = "font-size:15px")
                                  
                           )
                         )
