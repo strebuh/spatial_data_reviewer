@@ -1,5 +1,7 @@
 library(data.table)
 library(stringr)
+library(rgdal)
+library(spdep)
 
 data <- fread("data/GUS_all_merged3.csv", encoding = "UTF-8", stringsAsFactors = F) # fread fater but could not deal with long file names
 data <- data[,-1]
@@ -202,7 +204,7 @@ rownames(missings2) <- colnames(data06_18)
 
 
 #------------------------ fill na with neighours value -------------------------------
-
+getwd()
 # reading maps with rgdal::
 pov <- readOGR("../data", "powiaty") # 380 jedn. 
 
@@ -210,9 +212,9 @@ pov <- readOGR("../data", "powiaty") # 380 jedn.
 pov <- spTransform(pov, CRS("+proj=longlat +datum=NAD83"))
 
 # Spatial weights matrix – contiguity matrix
-cont.nb<-poly2nb(as(pov, "SpatialPolygons"))
-cont.listw<-nb2listw(cont.nb, style="W")
-head(cont.listw$neighbours)
+cont.nb <- poly2nb(as(pov, "SpatialPolygons"))
+cont.listw <- nb2listw(cont.nb, style="W")
+# head(cont.listw$neighbours)
 
 # get list of neighors for each pov and rename elements to it's teryts
 pov_neigh <- cont.listw$neighbours
@@ -237,7 +239,7 @@ colnames(missings2) = seq(min(data06_18$rok), max(data06_18$rok), 1)
 
 # # give NA column names
 rownames(missings2) <- colnames(data06_18)
-View(missings2)
+# View(missings2)
 
 
 missings_t <- setDT(as.data.frame(t(missings2)))
@@ -330,13 +332,17 @@ fill_by_neigh_mean <- function(data,              # data frame with data
   }
 
 
-results <- fill_by_neigh_mean(data06_18,              # data frame with data
+data06_18_contig_na_fill <- fill_by_neigh_mean(data06_18,              # data frame with data
                               years = 2006:2018,       # scope of years
                               rep_treshold = 66,       # up to how many missing poviats to fill
                               pov_neigh,              # cont.listw
                               # pov,                     # spatial object
                               missing_df=NULL
                               )
+
+dim(data06_18_contig_na_fill$data)
+# save a file
+saveRDS(data06_18_contig_na_fill$data, "./data/data06_18_contig_na_fill.RDS")
 
 clean_data <- results$data
 dim(clean_data)
