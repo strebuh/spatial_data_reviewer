@@ -16,6 +16,7 @@ get_interactive_map <- function(
   etykiety_obszarow = FALSE,                    # czy pokazac nazwy obszarow
   # kolor_granic_map = "",                        # kolor granic obszarow podstawowych (map)
   # kolor_granic_mapline = "black",               # kolor granic obszarow dodatkowych (mapline)
+  bucketing_seed,   # seed if bclust or kmeans
   tryb_podzialu = "hclust",                     # hclust, kmeans, sd
   paleta_kolorow = "BuPu",                        # nazwa palety do mapowania, albo wektor kolorow o ilosci kolorow rownej zmiennej ilosc_group
   reverse_palette=FALSE,                        # odwroc kolejnosc nasycenia kolorow palety
@@ -59,9 +60,11 @@ get_interactive_map <- function(
 
   # split on classes 
   if(is.null(ilosc_grup)){
+    if(tryb_podzialu == "kmeans" | tryb_podzialu == "bclust") set.seed(bucketing_seed)
     klasy <- classIntervals(zmienna, style=tryb_podzialu)
     ilosc_grup <- length(klasy$brks) - 1 
   } else {
+    if(tryb_podzialu == "kmeans" | tryb_podzialu == "bclust") set.seed(bucketing_seed)
     klasy <- classIntervals(zmienna, ilosc_grup, style=tryb_podzialu)
   }      
     
