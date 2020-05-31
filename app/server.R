@@ -4,7 +4,7 @@ library(plotly)
 library(htmlwidgets)
 library(highcharter)
 
-source("../scripts/mapka_obszarow_zab.R")
+source("../scripts/get_interactive_map.R")
 
 getwd()
 data <- readRDS("../data/data06_18_contig_na_fill.RDS") # fread fater but could not deal with long file names
