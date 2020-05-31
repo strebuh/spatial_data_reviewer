@@ -98,19 +98,19 @@ shinyServer(function(input, output){
                   choices = row.names(brewer.pal.info))
       }) 
       
-    # pick rule of bucketing
-    output$groupingTypeOutput <- renderUI({
-      radioButtons("groupingTypeIntput",
-                   label = "Type of grouping",
-                   choices  = c( "fixed", "sd", "equal", "pretty", "quantile", "kmeans", "hclust", "bclust", "fisher", "jenks", "dpih"),
-                   inline= T,
-                   selected = "sd")
-      }) 
-      
+    # # pick rule of bucketing
+    # output$groupingTypeOutput <- renderUI({
+    #   radioButtons("groupingTypeInput",
+    #                label = "Type of grouping",
+    #                choices  = c( "fixed", "sd", "equal", "pretty", "quantile", "kmeans", "hclust", "bclust", "fisher", "jenks", "dpih"),
+    #                inline= T,
+    #                selected = "sd")
+    #   })
+    #   
     # select seed to bclust or kmeans
     output$seedOutput <- renderUI({
       textInput("seedInput",
-                label = paste0(input$groupingTypeIntput," seed"),
+                label = paste0(input$groupingTypeInput," seed"),
                 value = 1)
     }) 
       
@@ -185,8 +185,8 @@ shinyServer(function(input, output){
           etykiety_obszarow = FALSE,                    # czy pokazac nazwy obszarow
           # kolor_granic_map = "",                        # kolor granic obszarow podstawowych (map)
           # kolor_granic_mapline = "black",               # kolor granic obszarow dodatkowych (mapline)
-          bucketing_seed = input$seedIntput,
-          tryb_podzialu = input$groupingTypeIntput,                     # hclust, kmeans, sd
+          bucketing_seed = input$seedInput,
+          tryb_podzialu = input$groupingTypeInput,                     # hclust, kmeans, sd
           paleta_kolorow = input$inputPalette,                        # nazwa palety do mapowania
           # zmienna_punkty = NULL,                     # bare name od zmiennej z liczba oddzialów
           nazwa_oddzialow = "zmienna"    # etykieta

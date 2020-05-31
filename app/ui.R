@@ -72,7 +72,12 @@ shinyUI(fluidPage(
                                      
                                      uiOutput("paletteOutput"),
                                      
-                                     uiOutput("groupingTypeOutput"),
+                                     # uiOutput("groupingTypeOutput"),
+                                     radioButtons("groupingTypeInput",
+                                                  label = "Type of grouping",
+                                                  choices  = c( "fixed", "sd", "equal", "pretty", "quantile", "kmeans", "hclust", "bclust", "fisher", "jenks", "dpih"),
+                                                  inline= T,
+                                                  selected = "pretty"),
                                      
                                      # type of bucketing
                                      radioButtons("bucketingTypeInput", label = h2("Bucketing"),
