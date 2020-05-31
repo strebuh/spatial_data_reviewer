@@ -4,7 +4,7 @@ library(plotly)
 library(htmlwidgets)
 library(highcharter)
 
-source("../scripts/mapka_obszarow_zab.R")
+source("../scripts/get_interactive_map.R")
 
 getwd()
 data <- readRDS("../data/data06_18_contig_na_fill.RDS") # fread fater but could not deal with long file names
@@ -97,8 +97,8 @@ shinyServer(function(input, output){
     }) 
       
       # pick rule of bucketing
-      output$groupingOutput <- renderUI({
-        radioButtons("groupingIntput", 
+      output$groupingTypeOutput <- renderUI({
+        radioButtons("groupingTypeIntput", 
                     label = "Type of grouping",
                     choices  = c( "fixed", "sd", "equal", "pretty", "quantile", "kmeans", "hclust", "bclust", "fisher", "jenks", "dpih"),
                     inline= T,
@@ -106,7 +106,7 @@ shinyServer(function(input, output){
       }) 
       
       
-    output$groupsOutput <- renderUI({
+    output$ngroupsOutput <- renderUI({
       sliderInput("groupsIntput", 
                   label = "Number of groups",
                   step = 1,
@@ -158,7 +158,7 @@ shinyServer(function(input, output){
                        c(names(data)[2:3], "jpt_kod_je", input$variableInput2)] # input$variableInput2
           # }
 
-        mapka_zabezpieczenie(
+        get_interactive_map(
           dane,                                   # ramka z danymi wg gmin (hospitalizacje itp)
           pov_json_list,                                   # obiekt mapy - json
           # mapline_json_list = NULL,
@@ -170,7 +170,7 @@ shinyServer(function(input, output){
           etykiety_obszarow = FALSE,                    # czy pokazac nazwy obszarow
           # kolor_granic_map = "",                        # kolor granic obszarow podstawowych (map)
           # kolor_granic_mapline = "black",               # kolor granic obszarow dodatkowych (mapline)
-          tryb_podzialu = input$groupingIntput,                     # hclust, kmeans, sd
+          tryb_podzialu = input$groupingTypeIntput,                     # hclust, kmeans, sd
           paleta_kolorow = input$inputPalette,                        # nazwa palety do mapowania
           # zmienna_punkty = NULL,                     # bare name od zmiennej z liczba oddzialów
           nazwa_oddzialow = "zmienna"    # etykieta
