@@ -76,8 +76,8 @@ shinyUI(fluidPage(
                                      # title of the plot
                                      uiOutput("titleOutput"),
                                      uiOutput("paletteOutput"),
-                                     uiOutput("groupsOutput"),
-                                     uiOutput("groupingOutput"),
+                                     uiOutput("groupingTypeOutput"),
+                                     uiOutput("ngroupsOutput"),
                                      hr(),
                                      # apply filters to prepare data statistics
                                      actionButton("filterAction2",label = "Show map")

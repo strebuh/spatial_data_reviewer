@@ -107,7 +107,7 @@ shinyServer(function(input, output){
       
       
     output$ngroupsOutput <- renderUI({
-      sliderInput("groupsIntput", 
+      sliderInput("ngroupsIntput", 
                   label = "Number of groups",
                   step = 1,
                   round=TRUE,
@@ -164,7 +164,7 @@ shinyServer(function(input, output){
           # mapline_json_list = NULL,
           zmienna_mapowana = 4,                        # index zmiennej do mapowania 
           joining_var = "jpt_kod_je",
-          ilosc_grup = input$groupsIntput,                               # na ile pobucketowac
+          ilosc_grup = input$ngroupsIntput,                               # na ile pobucketowac
           # lista_winietek = lista_winietek[c(1)],              # zmienne na hover klucz lista[nazwa_zmiennej] <- "teskt na hover"
           tytul = input$inputTitle,                                # tytul do wykresu 
           etykiety_obszarow = FALSE,                    # czy pokazac nazwy obszarow
