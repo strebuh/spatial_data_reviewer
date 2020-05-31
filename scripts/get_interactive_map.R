@@ -3,8 +3,6 @@ library(stringr)
 library(highcharter)
 library(RColorBrewer)
 library(classInt)
-# remove.packages("highcharter")
-
 
 get_interactive_map <- function(
   plot_data,                                   # data frame with data, each row one polygon equivalent
@@ -156,3 +154,4 @@ get_interactive_map <- function(
   
   return(mapka)
 }
+
