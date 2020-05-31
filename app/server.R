@@ -64,6 +64,8 @@ shinyServer(function(input, output){
     }) 
   })
   
+  
+  # MAP tab outputs
   observe({
     # choose variable
     output$variableOutput2 <- renderUI({
@@ -80,6 +82,7 @@ shinyServer(function(input, output){
                   choices = unique(data$rok))
     }) 
     
+    # choose title
     output$titleOutput <- renderUI({
       textInput("inputTitle", 
                 label="Title",
@@ -87,24 +90,29 @@ shinyServer(function(input, output){
       )
     }) 
     
-    
-      # choose palette
-      output$paletteOutput <- renderUI({
-        selectInput("inputPalette", 
-                    label="Palette",
-                    selected = "BuPu",
-                    choices = row.names(brewer.pal.info))
-    }) 
-      
-      # pick rule of bucketing
-      output$groupingTypeOutput <- renderUI({
-        radioButtons("groupingTypeIntput", 
-                    label = "Type of grouping",
-                    choices  = c( "fixed", "sd", "equal", "pretty", "quantile", "kmeans", "hclust", "bclust", "fisher", "jenks", "dpih"),
-                    inline= T,
-                    selected = "sd")
+    # choose palette
+    output$paletteOutput <- renderUI({
+      selectInput("inputPalette",
+                  label="Palette",
+                  selected = "BuPu",
+                  choices = row.names(brewer.pal.info))
       }) 
       
+    # pick rule of bucketing
+    output$groupingTypeOutput <- renderUI({
+      radioButtons("groupingTypeIntput",
+                   label = "Type of grouping",
+                   choices  = c( "fixed", "sd", "equal", "pretty", "quantile", "kmeans", "hclust", "bclust", "fisher", "jenks", "dpih"),
+                   inline= T,
+                   selected = "sd")
+      }) 
+      
+    # select seed to bclust or kmeans
+    output$seedOutput <- renderUI({
+      textInput("seedInput",
+                label = paste0(input$groupingTypeIntput," seed"),
+                value = 1)
+    }) 
       
     output$ngroupsOutput <- renderUI({
       sliderInput("ngroupsIntput", 
@@ -157,19 +165,27 @@ shinyServer(function(input, output){
         dane <- data[data$rok == input$inputYear2, 
                        c(names(data)[2:3], "jpt_kod_je", input$variableInput2)] # input$variableInput2
           # }
-
+        
+        # set appropiate number of groups of NULL if Automatic bucketing selected
+        if(input$bucketingTypeInput == 1){
+          ngroupsIntput <- input$ngroupsIntput
+        } else {
+          ngroupsIntput <- NULL
+        }
+        
         get_interactive_map(
           dane,                                   # ramka z danymi wg gmin (hospitalizacje itp)
           pov_json_list,                                   # obiekt mapy - json
           # mapline_json_list = NULL,
           zmienna_mapowana = 4,                        # index zmiennej do mapowania 
           joining_var = "jpt_kod_je",
-          ilosc_grup = input$ngroupsIntput,                               # na ile pobucketowac
+          ilosc_grup = ngroupsIntput,                               # na ile pobucketowac
           # lista_winietek = lista_winietek[c(1)],              # zmienne na hover klucz lista[nazwa_zmiennej] <- "teskt na hover"
           tytul = input$inputTitle,                                # tytul do wykresu 
           etykiety_obszarow = FALSE,                    # czy pokazac nazwy obszarow
           # kolor_granic_map = "",                        # kolor granic obszarow podstawowych (map)
           # kolor_granic_mapline = "black",               # kolor granic obszarow dodatkowych (mapline)
+          bucketing_seed = input$seedIntput,
           tryb_podzialu = input$groupingTypeIntput,                     # hclust, kmeans, sd
           paleta_kolorow = input$inputPalette,                        # nazwa palety do mapowania
           # zmienna_punkty = NULL,                     # bare name od zmiennej z liczba oddzialów

@@ -66,18 +66,36 @@ shinyUI(fluidPage(
                                      # choice of variable, based on variables in data
                                      uiOutput("variableOutput2"),
                                      
-                                     # # choice of whether single year or time span
-                                     # radioButtons("periodType", label = h2("Period Span"),
-                                     #              choices = list("Single Yaar" = 0, "Multiple Years" = 1), 
-                                     #              selected = 0),
-                                     
-                                     # based ib period type wither a single year or span
                                      uiOutput("yearOutput2"),
-                                     # title of the plot
+                                     
                                      uiOutput("titleOutput"),
+                                     
                                      uiOutput("paletteOutput"),
+                                     
                                      uiOutput("groupingTypeOutput"),
-                                     uiOutput("ngroupsOutput"),
+                                     
+                                     # type of bucketing
+                                     radioButtons("bucketingTypeInput", label = h2("Bucketing"),
+                                                  choices = list("Automatic" = 0, "Manual" = 1), 
+                                                  selected = 0,
+                                                  inline= T),
+                                     
+                                     # if kmeans or bclust enter seed
+                                     conditionalPanel(condition ="input.groupingTypeInput == 'kmeans' | input.groupingTypeInput == 'bclust'",
+                                                      uiOutput("seedOutput")
+                                                      ),
+                                     # if manual, choose number of groups, type, and
+                                     conditionalPanel(condition ="input.bucketingTypeInput == 1", 
+                                                      uiOutput("ngroupsOutput")
+                                                      ),
+                                     
+                                     # # based ib period type wither a single year or span
+                                     # uiOutput("yearOutput2"),
+                                     # # title of the plot
+                                     # uiOutput("titleOutput"),
+                                     # uiOutput("paletteOutput"),
+                                     # uiOutput("groupingTypeOutput"),
+                                     # uiOutput("ngroupsOutput"),
                                      hr(),
                                      # apply filters to prepare data statistics
                                      actionButton("filterAction2",label = "Show map")
