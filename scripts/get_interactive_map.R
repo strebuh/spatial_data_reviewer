@@ -63,10 +63,18 @@ get_interactive_map <- function(
     if(tryb_podzialu == "kmeans" | tryb_podzialu == "bclust") set.seed(bucketing_seed)
     klasy <- classIntervals(zmienna, style=tryb_podzialu)
     ilosc_grup <- length(klasy$brks) - 1 
-  } else {
-    if(tryb_podzialu == "kmeans" | tryb_podzialu == "bclust") set.seed(bucketing_seed)
+  } else if((tryb_podzialu == "sd" | tryb_podzialu == "pretty") & (length(klasy$brks)!=ilosc_grup)){
+    
+    # for sd and pretty function may change n, thus update n
     klasy <- classIntervals(zmienna, ilosc_grup, style=tryb_podzialu)
-  }      
+    ilosc_grup <- length(klasy$brks) - 1 
+    warning(paste(tryb_podzialu, "has changed number of groups to", ilosc_grup))
+    
+  } else if(tryb_podzialu == "kmeans" | tryb_podzialu == "bclust"){
+    # if kmeans or bclust set seed (if not given, then it's null)
+    set.seed(bucketing_seed)
+    klasy <- classIntervals(zmienna, ilosc_grup, style=tryb_podzialu)
+  } 
     
   # przygotuj kolory dla wartosci zmiennej
   # jezeli 1 element, to nazwa palety, wybierze z niej ilosc kolorow
