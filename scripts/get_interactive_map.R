@@ -10,7 +10,7 @@ get_interactive_map <- function(
   # mapline_json_list = NULL,                          # json obszarow zabezpieczenia, jezeli nie podane, nie ryzuje wartosci konturow dodatkowych
   zmienna_mapowana,                             # index zmiennej do mapowania 
   joining_var = "jpt_kod_je",
-  ilosc_grup,                                   # na ile pobucketowac
+  ilosc_grup = NULL,                                   # na ile pobucketowac
   # lista_winietek,                                # zmienne na hover klucz lista[nazwa_zmiennej] <- "teskt na hover"
   tytul = " ",                                  # tytul do wykresu 
   etykiety_obszarow = FALSE,                    # czy pokazac nazwy obszarow
@@ -56,9 +56,15 @@ get_interactive_map <- function(
   zmienna <- plot_data$value
 
   # --------------------------------------------------------------------
-  
 
-  
+  # split on classes 
+  if(is.null(ilosc_grup)){
+    klasy <- classIntervals(zmienna, style=tryb_podzialu)
+    ilosc_grup <- length(klasy$brks) - 1 
+  } else {
+    klasy <- classIntervals(zmienna, ilosc_grup, style=tryb_podzialu)
+  }      
+    
   # przygotuj kolory dla wartosci zmiennej
   # jezeli 1 element, to nazwa palety, wybierze z niej ilosc kolorow
   if(length(paleta_kolorow)==1){
@@ -76,8 +82,7 @@ get_interactive_map <- function(
   if(reverse_palette==TRUE){
     kolory <- rev(kolory)
   }
-  # podzial na przedzialy wg wybranego trybu podzialu
-  klasy <- classIntervals(zmienna, ilosc_grup, style=tryb_podzialu)
+    
   # tabela z przedzialami i kolorami
   tabela.kolorow <- findColours(klasy, kolory)
   
