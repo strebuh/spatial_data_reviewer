@@ -18,6 +18,7 @@ get_interactive_map <- function(
   # kolor_granic_mapline = "black",               # kolor granic obszarow dodatkowych (mapline)
   bucketing_seed,   # seed if bclust or kmeans
   tryb_podzialu = "hclust",                     # hclust, kmeans, sd
+  breaks = c(),
   paleta_kolorow = "BuPu",                        # nazwa palety do mapowania, albo wektor kolorow o ilosci kolorow rownej zmiennej ilosc_group
   reverse_palette=FALSE,                        # odwroc kolejnosc nasycenia kolorow palety
   # zmienna_punkty = NULL,                      # zmienna wyznaczajaca punkty
@@ -70,11 +71,18 @@ get_interactive_map <- function(
     ilosc_grup <- length(klasy$brks) - 1 
     warning(paste(tryb_podzialu, "has changed number of groups to", ilosc_grup))
     
+  } else if(tryb_podzialu == "fixed"){
+    
+    # custom_breaks <- c(min(zmienna), breaks, max(zmienna))
+    print(custom_breaks)
+    klasy <- classIntervals(zmienna, style=tryb_podzialu, fixedBreaks = breaks)
+    ilosc_grup <- length(breaks) - 1
+    
   } else if(tryb_podzialu == "kmeans" | tryb_podzialu == "bclust"){
     # if kmeans or bclust set seed (if not given, then it's null)
     set.seed(bucketing_seed)
     klasy <- classIntervals(zmienna, ilosc_grup, style=tryb_podzialu)
-  } 
+  }
     
   # przygotuj kolory dla wartosci zmiennej
   # jezeli 1 element, to nazwa palety, wybierze z niej ilosc kolorow
