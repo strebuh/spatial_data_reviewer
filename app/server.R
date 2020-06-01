@@ -3,6 +3,7 @@ library(shiny)
 library(plotly)
 library(htmlwidgets)
 library(highcharter)
+library(bsplus)
 
 source("../scripts/get_interactive_map.R")
 
@@ -28,6 +29,10 @@ pov_json_list <- readRDS("../data/poviaty_json_list.RDS")
 # pov_json <- geojsonio::as.json("../data/powiaty/pow.json")
 
 shinyServer(function(input, output){
+  
+  # -------------------------------------------------- sidebar panel inputs -------------------------------------------------
+  
+  # -------------------------------------------------- tab 1 -------------------------------------------------  
   
   # observe the filters
   observe({
@@ -64,6 +69,7 @@ shinyServer(function(input, output){
     }) 
   })
   
+  # -------------------------------------------------- tab 2 -------------------------------------------------  
   
   # MAP tab outputs
   observe({
@@ -80,15 +86,15 @@ shinyServer(function(input, output){
                   label="Year",
                   selected = 2018,
                   choices = unique(data$rok))
-    }) 
+      }) 
     
     # choose title
     output$titleOutput <- renderUI({
       textInput("inputTitle", 
                 label="Title",
                 value = paste("Plot of", input$variableInput2 ,"in", input$inputYear2)
-      )
-    }) 
+                )
+      }) 
     
     # choose palette
     output$paletteOutput <- renderUI({
@@ -106,27 +112,54 @@ shinyServer(function(input, output){
     #                inline= T,
     #                selected = "sd")
     #   })
-    #   
+
     # select seed to bclust or kmeans
     output$seedOutput <- renderUI({
       textInput("seedInput",
                 label = paste0(input$groupingTypeInput," seed"),
                 value = 1)
-    }) 
+      })
+     
+    # created text inputs for breaks 
+    output$fixedBreaksTexts <- renderUI({
+    #   n_breaks <- as.integer(input$ngroupsInput) # nie wiem czy tu nie blad, pokazuje bez min i max teraz, tylsko srodkowe wartosci
+    # lapply(2:n_breaks, function(i) {
+    #   # if(i==1){ # dodac min i max aktualnej zmiennej
+    #     textInput(paste0("break_",i),
+    #               label = paste0("Break ",i),
+    #               width = "25%"
+    #               )
+    #   })
       
-    output$ngroupsOutput <- renderUI({
-      sliderInput("ngroupsIntput", 
-                  label = "Number of groups",
-                  step = 1,
-                  round=TRUE,
-                  sep="",
-                  min = 2, 
-                  max = 12,
-                  value = 4)
-      }) 
-      
-  })
+      variable <- data[data$rok == input$inputYear2, input$variableInput2]
+      min_ <- min(variable)
+      max_ <- max(variable)
+      intermediate <- paste(rep("_", as.integer(input$ngroupsInput)-1), collapse = "  ")
+
+      textInput("breaksInput",
+                label = paste0("Breaks"),
+                value = paste(min_, intermediate, max_, sep = "  ")) %>%
+        shinyInput_label_embed(
+          icon("info") %>%
+            bs_embed_tooltip(title = "Replace underscores with break values separated by space")
+        )
+      })
+    })
+    
+    # # extract breaks
+    fixedBreaks <- reactive({
+          # separate text inputs
+      print(input$breaksInput)
+          breaks_vec <- as.numeric(unlist(stringr::str_split(input$breaksInput, pattern = "\\s+")))
+          # n_breaks <- as.integer(input$ngroupsInput)
+          # breaks <- unlist(sapply(2:n_breaks-1, function(i) {
+          #   as.numeric(input[[paste0("break_", i)]])
+          })
+
+
+  # -------------------------------------------------- outoputs -------------------------------------------------
   
+  # -------------------------------------------------- tab 1 -------------------------------------------------  
   
   # get data for table and plot
     filtered <- reactive({
@@ -146,21 +179,21 @@ shinyServer(function(input, output){
       }
     })
     
+    
     output$dataOutput <- DT::renderDataTable({
       input$filterAction
       isolate({filtered()
       })
     })
-    
-    # 
-    
+
+    # -------------------------------------------------- tab 2 -------------------------------------------------
     
     # get data for table and plot
-
     mapka <- reactive({
       if(is.null(input$variableInput2)) {
         return(NULL)
-      } else{
+      } else if(0){}
+      else {
         # do not show anyting at the beggining, otherwise error
         dane <- data[data$rok == input$inputYear2, 
                        c(names(data)[2:3], "jpt_kod_je", input$variableInput2)] # input$variableInput2
@@ -168,10 +201,13 @@ shinyServer(function(input, output){
         
         # set appropiate number of groups of NULL if Automatic bucketing selected
         if(input$bucketingTypeInput == 1){
-          ngroupsIntput <- input$ngroupsIntput
+          ngroupsInput <- input$ngroupsInput
         } else {
-          ngroupsIntput <- NULL
+          ngroupsInput <- NULL
         }
+        
+        # # # tu nie dziala
+        # fixedBreaks <- stringr::str_split(input$breaksInput, "\\s+")
         
         get_interactive_map(
           dane,                                   # ramka z danymi wg gmin (hospitalizacje itp)
@@ -179,7 +215,7 @@ shinyServer(function(input, output){
           # mapline_json_list = NULL,
           zmienna_mapowana = 4,                        # index zmiennej do mapowania 
           joining_var = "jpt_kod_je",
-          ilosc_grup = ngroupsIntput,                               # na ile pobucketowac
+          ilosc_grup = ngroupsInput,                               # na ile pobucketowac
           # lista_winietek = lista_winietek[c(1)],              # zmienne na hover klucz lista[nazwa_zmiennej] <- "teskt na hover"
           tytul = input$inputTitle,                                # tytul do wykresu 
           etykiety_obszarow = FALSE,                    # czy pokazac nazwy obszarow
@@ -187,6 +223,7 @@ shinyServer(function(input, output){
           # kolor_granic_mapline = "black",               # kolor granic obszarow dodatkowych (mapline)
           bucketing_seed = input$seedInput,
           tryb_podzialu = input$groupingTypeInput,                     # hclust, kmeans, sd
+          breaks = fixedBreaks(),
           paleta_kolorow = input$inputPalette,                        # nazwa palety do mapowania
           # zmienna_punkty = NULL,                     # bare name od zmiennej z liczba oddzialów
           nazwa_oddzialow = "zmienna"    # etykieta
@@ -210,6 +247,8 @@ shinyServer(function(input, output){
         saveWidget(mapka(), file)
       }
     )
+  })
+
     
     # downloading
     # https://shiny.rstudio.com/articles/download.html
@@ -218,7 +257,7 @@ shinyServer(function(input, output){
     # https://datascienceplus.com/making-a-shiny-dashboard-using-highcharter-analyzing-inflation-rates/
     # https://cran.r-project.org/web/packages/rmapshaper/vignettes/rmapshaper.html
 
-})
+
 
 
 

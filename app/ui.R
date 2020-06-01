@@ -80,27 +80,48 @@ shinyUI(fluidPage(
                                                   selected = "pretty"),
                                      
                                      # type of bucketing
-                                     radioButtons("bucketingTypeInput", label = h2("Bucketing"),
+                                     radioButtons("bucketingTypeInput", label = "Bucketing mode",
                                                   choices = list("Automatic" = 0, "Manual" = 1), 
                                                   selected = 0,
                                                   inline= T),
                                      
-                                     # if kmeans or bclust enter seed
+                                     # if kmeans or bclust enter seed | if not for name of kmean of bclust seet input could be here
                                      conditionalPanel(condition ="input.groupingTypeInput == 'kmeans' | input.groupingTypeInput == 'bclust'",
                                                       uiOutput("seedOutput")
                                                       ),
+                                     
+                                     # # if fixed
+                                     # conditionalPanel(condition ="input.groupingTypeInput == 'fixed'",
+                                     #                  # input here
+                                     # ),
+                                     
+                                     # # if fixed and automatic
+                                     # conditionalPanel(condition ="input.bucketingTypeInput == 0 & input.groupingTypeInput == 'fixed'", 
+                                     #                  uiOutput("fixedBucketMessageOutput")
+                                     # ),
+                                     
+                                     # # if fixed and manual
+                                     # conditionalPanel(condition ="input.bucketingTypeInput == 1 & input.groupingTypeInput == 'fixed'",
+                                     #                  uiOutput("ngroupsOutput")
+                                     #                  # uiOutput("fixedBucketOutput"),
+                                     # ),
+
                                      # if manual, choose number of groups, type, and
                                      conditionalPanel(condition ="input.bucketingTypeInput == 1", 
-                                                      uiOutput("ngroupsOutput")
+                                                      sliderInput("ngroupsInput", 
+                                                                  label = "Number of groups",
+                                                                  step = 1,
+                                                                  round=TRUE,
+                                                                  sep="",
+                                                                  min = 2, 
+                                                                  max = 12,
+                                                                  value = 4),# ),
+                                                      # nested panel for producing fixed breaks
+                                                      conditionalPanel(condition ="input.groupingTypeInput == 'fixed'",
+                                                                       uiOutput("fixedBreaksTexts")
+                                                                       )
                                                       ),
-                                     
-                                     # # based ib period type wither a single year or span
-                                     # uiOutput("yearOutput2"),
-                                     # # title of the plot
-                                     # uiOutput("titleOutput"),
-                                     # uiOutput("paletteOutput"),
-                                     # uiOutput("groupingTypeOutput"),
-                                     # uiOutput("ngroupsOutput"),
+                                    
                                      hr(),
                                      # apply filters to prepare data statistics
                                      actionButton("filterAction2",label = "Show map")
