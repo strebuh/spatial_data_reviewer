@@ -2,7 +2,7 @@ library(plotly)
 library(shinythemes)
 library(shinyWidgets)
 library(highcharter)
-
+library(shinycssloaders)
 
 shinyUI(fluidPage(
   
