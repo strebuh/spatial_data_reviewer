@@ -109,7 +109,6 @@ shinyUI(fluidPage(
                                                                    step = 1)
                                      ),
                                      
-                                     # uiOutput("groupingTypeOutput"),
                                      selectInput("groupingTypeInput",
                                                   label = "Type of grouping",
                                                   choices  = c("fixed", "sd", "equal", "pretty", "quantile", 
