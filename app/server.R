@@ -4,26 +4,15 @@ library(plotly)
 library(htmlwidgets)
 library(highcharter)
 library(bsplus)
+library(backports)
 
 source("../scripts/get_interactive_map.R")
 
-getwd()
 data <- readRDS("../data/data06_18_contig_na_fill.RDS") # fread fater but could not deal with long file names
 # data <- readRDS("data/data06_18_contig_na_fill.RDS") # fread fater but could not deal with long file names
-# names(data)[1:5]
-# class(data$cz_bud_m_jednorodz_mc)
-
 
 # zmien nazwe zmiennej teryt
 names(data)[which(names(data) == "teryt")] = "jpt_kod_je" # ty wlaczyc wybieranie ktora zmienna jest wspolna
-
-# data <- readRDS("./data/data06_18_contig_na_fill.RDS") # fread fater but could not deal with long file names
-# which(names(data) == "teryt")
-# # zmien nazwe zmiennej teryt
-# names(data)[which(names(data) == "teryt")] = "jpt_kod_je" # ty wlaczyc wybieranie ktora zmienna jest wspolna
-# # do not show anyting at the beggining, otherwise error
-# dane <- data[data$rok == input$inputYear2, 
-#              c(names(data)[3], "jpt_kod_je", input$variableInput2)]
 
 pov_json_list <- readRDS("../data/poviaty_json_list.RDS")
 # pov_json <- geojsonio::as.json("../data/powiaty/pow.json")
@@ -34,8 +23,6 @@ shinyServer(function(input, output){
   
   # -------------------------------------------------- tab 1 -------------------------------------------------  
   
-  # observe the filters
-  observe({
     # choose variable
     output$variableOutput <- renderUI({
       selectInput("variableInput", 
@@ -67,26 +54,32 @@ shinyServer(function(input, output){
                   min = min(data$rok), max = max(data$rok),
                   value = c(2017, 2018))
     }) 
-  })
-  
+    
+
   # -------------------------------------------------- tab 2 -------------------------------------------------  
   
   # MAP tab outputs
-  observe({
-    # choose variable
+  
+  ## in observe we put code that is dependend on reactive variables needs to be reevaluated when ractive variable (input) changes
+  ## not sure if thing that data needs to be inside <- try it
+  ## reactive is similiar but let get a returned value, so uses reactive variables and it's reealuation is triggered be their changes
+  ## and also returns a values
+  
+
+    # choose variable <- doesnt depend on input variable, so not in observe
     output$variableOutput2 <- renderUI({
       selectInput("variableInput2", 
                   label="Variable",
                   choices = names(data)[5:length(names(data))-1])
     })
     
-    # choose single year 
+    # choose single year <- doesnt depend on input variable, so not in observe
     output$yearOutput2 <- renderUI({
       selectInput("inputYear2", 
                   label="Year",
                   selected = 2018,
                   choices = unique(data$rok))
-      }) 
+    }) 
     
     # choose title
     output$titleOutput <- renderUI({
@@ -94,7 +87,7 @@ shinyServer(function(input, output){
                 label="Title",
                 value = paste("Plot of", input$variableInput2 ,"in", input$inputYear2)
                 )
-      }) 
+      })
     
     # choose palette
     output$paletteOutput <- renderUI({
@@ -104,14 +97,6 @@ shinyServer(function(input, output){
                   choices = row.names(brewer.pal.info))
       }) 
       
-    # # pick rule of bucketing
-    # output$groupingTypeOutput <- renderUI({
-    #   radioButtons("groupingTypeInput",
-    #                label = "Type of grouping",
-    #                choices  = c( "fixed", "sd", "equal", "pretty", "quantile", "kmeans", "hclust", "bclust", "fisher", "jenks", "dpih"),
-    #                inline= T,
-    #                selected = "sd")
-    #   })
 
     # select seed to bclust or kmeans
     output$seedOutput <- renderUI({
@@ -120,17 +105,10 @@ shinyServer(function(input, output){
                 value = 1)
       })
      
-    # created text inputs for breaks 
+
+    # created text inputs for breaks, based on ranges of selected variable 
     output$fixedBreaksTexts <- renderUI({
-    #   n_breaks <- as.integer(input$ngroupsInput) # nie wiem czy tu nie blad, pokazuje bez min i max teraz, tylsko srodkowe wartosci
-    # lapply(2:n_breaks, function(i) {
-    #   # if(i==1){ # dodac min i max aktualnej zmiennej
-    #     textInput(paste0("break_",i),
-    #               label = paste0("Break ",i),
-    #               width = "25%"
-    #               )
-    #   })
-      
+
       variable <- data[data$rok == input$inputYear2, input$variableInput2]
       min_ <- min(variable)
       max_ <- max(variable)
@@ -140,22 +118,29 @@ shinyServer(function(input, output){
                 label = paste0("Breaks"),
                 value = paste(min_, intermediate, max_, sep = "  ")) %>%
         shinyInput_label_embed(
+          # add information icon with instruction
           icon("info") %>%
             bs_embed_tooltip(title = "Replace underscores with break values separated by space")
         )
       })
+
+    
+    # function to extract numbers of breaks from breaksInput | this needs to be in reactive, because uses input that needs to be updates and 
+    # needs to return a value
+    fixedBreaks <- reactive({
+      # separate text inputs
+      breaks <- as.numeric(unlist(stringr::str_split(input$breaksInput, pattern = "\\s+")))
     })
     
-    # # extract breaks
-    fixedBreaks <- reactive({
-          # separate text inputs
-      print(input$breaksInput)
-          breaks_vec <- as.numeric(unlist(stringr::str_split(input$breaksInput, pattern = "\\s+")))
-          # n_breaks <- as.integer(input$ngroupsInput)
-          # breaks <- unlist(sapply(2:n_breaks-1, function(i) {
-          #   as.numeric(input[[paste0("break_", i)]])
-          })
-
+    # dependent on input, and need to reevaluate and return so in reactive
+    not_fixed_automatic <- reactive({
+      if(input$bucketingTypeInput == 0){
+        showNotification("Fixed type cannot be automatic!",
+                         type="error",
+                         duration = 7)
+        return(NULL)
+      }
+    })
 
   # -------------------------------------------------- outoputs -------------------------------------------------
   
@@ -190,51 +175,78 @@ shinyServer(function(input, output){
     
     # get data for table and plot
     mapka <- reactive({
-      if(is.null(input$variableInput2)) {
-        return(NULL)
-      } else if(0){}
-      else {
+      
+        # initially no variabls, so map cannot be generated, so initially empty screen
+        if(is.null(input$variableInput2)) {
+          return(NULL)
+          
+        } else if(input$groupingTypeInput == "fixed"){
+          
+          # if fixed but automatic retun notification of error and do not still NULL
+          if(input$bucketingTypeInput == 0){
+            showNotification("Fixed type cannot be automatic!",
+                             type="error",
+                             duration = 7)
+            return(NULL)
+            
+          } else {
+            
+          # if fixed but manual, generate break from provided numbers  
+          # else if(input$bucketingTypeInput == 0 & input$groupingTypeInput == "fixed"){
+          breaks <- fixedBreaks()
+          
+            # if breaks are not correct (not numbers, that were coerced to NA) notify and NULL
+            if(anyNA(breaks)){
+              showNotification("All breaks must be numeric!", 
+                               type="error",
+                               duration = 7)
+              return(NULL)
+              
+              # if fewer than expected breaks nofity error and return NULL
+            } else if(length(breaks) != input$ngroupsInput+1){
+              showNotification(paste0("Number of groups doesn't match number of breaks!\n Required ",
+                                      input$ngroupsInput + 1," digits"),
+                               type="error",
+                               duration = 7)
+              return(NULL)
+            }
+          }
+        }
+
+        # think of replacing notify by  validate() to get information <- write funciton for these
+      
         # do not show anyting at the beggining, otherwise error
         dane <- data[data$rok == input$inputYear2, 
-                       c(names(data)[2:3], "jpt_kod_je", input$variableInput2)] # input$variableInput2
-          # }
+                       c(names(data)[2:3], "jpt_kod_je", input$variableInput2)] 
         
-        # set appropiate number of groups of NULL if Automatic bucketing selected
+        # if one recalculates the map in the same session, change number of groups
         if(input$bucketingTypeInput == 1){
           ngroupsInput <- input$ngroupsInput
         } else {
           ngroupsInput <- NULL
         }
         
-        # # # tu nie dziala
-        # fixedBreaks <- stringr::str_split(input$breaksInput, "\\s+")
-        
+
         get_interactive_map(
-          dane,                                   # ramka z danymi wg gmin (hospitalizacje itp)
-          pov_json_list,                                   # obiekt mapy - json
-          # mapline_json_list = NULL,
-          zmienna_mapowana = 4,                        # index zmiennej do mapowania 
+          plot_data = dane,                                       # frame with data (variables)
+          map_json = pov_json_list,                              # spatial object  - json_list (special for highcharter)
+          mapped_variable = 4,                       # index of variable for mapping (always 4) in this setting
           joining_var = "jpt_kod_je",
-          ilosc_grup = ngroupsInput,                               # na ile pobucketowac
-          # lista_winietek = lista_winietek[c(1)],              # zmienne na hover klucz lista[nazwa_zmiennej] <- "teskt na hover"
-          tytul = input$inputTitle,                                # tytul do wykresu 
-          etykiety_obszarow = FALSE,                    # czy pokazac nazwy obszarow
-          # kolor_granic_map = "",                        # kolor granic obszarow podstawowych (map)
-          # kolor_granic_mapline = "black",               # kolor granic obszarow dodatkowych (mapline)
+          groups_quantity = ngroupsInput,                  # nmber of groups to be created in map
+          title = input$inputTitle,                   # map title
           bucketing_seed = input$seedInput,
-          tryb_podzialu = input$groupingTypeInput,                     # hclust, kmeans, sd
-          breaks = fixedBreaks(),
-          paleta_kolorow = input$inputPalette,                        # nazwa palety do mapowania
-          # zmienna_punkty = NULL,                     # bare name od zmiennej z liczba oddzialów
-          nazwa_oddzialow = "zmienna"    # etykieta
+          bucketing_type = input$groupingTypeInput,    # bucketing algorithm
+          breaks = breaks,
+          colors_palette = input$inputPalette,        # coloring palette name
+          reverse_palette = FALSE                     # reverse palette
         )
-      }
     })
     
     output$mapOutput <- renderHighchart({
-      input$filterAction2
-      isolate({mapka()})
-    })
+            input$filterAction2
+            isolate({mapka()})
+          })
+
     
     
     # Downloadable csv of selected dataset ----

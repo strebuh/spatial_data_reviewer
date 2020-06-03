@@ -5,9 +5,20 @@ library(highcharter)
 
 
 shinyUI(fluidPage(
+  
+  tags$head(
+    tags$style(HTML("
+      .shiny-output-error-validation {
+        color: #ff0000;
+        font-weight: bold;
+      }
+    "))
+  ),
+  
   # upper darg green bar
   navbarPage("Poviat flat prices",
-             # tabs
+             
+             # -------------------------------------------------- tab 1 -------------------------------------------------  
              tabPanel("Data",
                       fluidPage(theme = shinytheme("flatly")),
                       # tags$head(
@@ -53,6 +64,8 @@ shinyUI(fluidPage(
                         )
                       )
                       ),
+             
+             # -------------------------------------------------- tab 2 -------------------------------------------------  
              
              tabPanel("Map",
                       fluidPage(theme = shinytheme("flatly")),
@@ -139,10 +152,12 @@ shinyUI(fluidPage(
                       )
              ),
              
-             tabPanel("Map",
+             # -------------------------------------------------- tab 3, 4 -------------------------------------------------  
+             
+             tabPanel("Tab 3",
                       p("This is a place for some explonation", target="_blank"), ".",style = "font-size:25px"),
              
-             tabPanel("Other part ",
+             tabPanel("Tab 4",
                       p(a("WNE", href="https://www.wne.uw.edu.pl/en/", target="_blank"),style = "font-size:25px")
                       )
              
