@@ -26,9 +26,14 @@ shinyServer(function(input, output){
   
     # choose variable
     output$variableOutput <- renderUI({
+      
+      choices <- names(data)[5:length(names(data))-1]
       selectInput("variableInput", 
-                  label="Variable",
-                  choices = names(data)[5:length(names(data))-1])
+                  label="Variables",
+                  choices = choices,
+                  multiple = TRUE,
+                  selected = sample(choices, 3)
+                  )
     })
     
     # choose area
@@ -42,7 +47,8 @@ shinyServer(function(input, output){
     output$yearOutput <- renderUI({
       selectInput("inputYear", 
                   label="Year",
-                  choices = unique(data$rok))
+                  choices = unique(data$rok),
+                  selected = 2018)
     }) 
     
     # choose range of years
@@ -53,8 +59,9 @@ shinyServer(function(input, output){
                   round=TRUE,
                   sep="",
                   min = min(data$rok), max = max(data$rok),
-                  value = c(2017, 2018))
+                  value = c(2016, 2018))
     }) 
+    
     
 
   # -------------------------------------------------- tab 2 -------------------------------------------------  
@@ -134,15 +141,15 @@ shinyServer(function(input, output){
       breaks <- as.numeric(unlist(stringr::str_split(input$breaksInput, pattern = "\\s+")))
     })
     
-    # dependent on input, and need to reevaluate and return so in reactive
-    not_fixed_automatic <- reactive({
-      if(input$bucketingTypeInput == 0){
-        showNotification("Fixed type cannot be automatic!",
-                         type="error",
-                         duration = 7)
-        return(NULL)
-      }
-    })
+    # # dependent on input, and need to reevaluate and return so in reactive
+    # not_fixed_automatic <- reactive({
+    #   if(input$bucketingTypeInput == 0){
+    #     showNotification("Fixed and  type cannot be automatic!",
+    #                      type="error",
+    #                      duration = 7)
+    #     return(NULL)
+    #   }
+    # })
 
   # -------------------------------------------------- outoputs -------------------------------------------------
   
@@ -150,26 +157,81 @@ shinyServer(function(input, output){
   
   # get data for table and plot
     filtered <- reactive({
-      # do not show anyting at the beggining, otherwise error
-      if(is.null(input$areaInput)) {
-        return(NULL)
-      } else if(input$periodType == 0){
+      
+      # # do not show anyting at the beggining, otherwise error
+      req(input$variableInput)
+      
+        if(input$periodType == 0){
         # if on single year
-        data[data$rok == input$inputYear &
+          fitered_data1 <- data[data$rok == input$inputYear &
+               data$Nazwa %in% if(input$areaInput=="Poland") unique(data$Nazwa) else input$areaInput, 
+             c(names(data)[1:3],input$variableInput)]
+          return(fitered_data1)
+      } else {
+        # if range of years
+        fitered_data1 <- data[data$rok %in% input$inputYears[1]:input$inputYears[2] &
+               data$Nazwa %in% if(input$areaInput=="Poland") unique(data$Nazwa) else input$areaInput, 
+             c(names(data)[1:3],input$variableInput)]
+        return(fitered_data1)
+      }
+    })
+    
+    # function for displaying missings
+    missings <- reactive({
+      
+      # filter data, filtered is reactive, thus will not be null, always gets generated
+      req(input$variableInput)
+      
+        if(input$periodType == 0){
+        # if on single year
+        fitered_data <- data[data$rok == input$inputYear &
                data$Nazwa %in% if(input$areaInput=="Poland") unique(data$Nazwa) else input$areaInput, 
              c(names(data)[1:3],input$variableInput)]
       } else {
         # if range of years
-        data[data$rok %in% input$inputYears[1]:input$inputYears[2] &
+        fitered_data <- data[data$rok %in% input$inputYears[1]:input$inputYears[2] &
                data$Nazwa %in% if(input$areaInput=="Poland") unique(data$Nazwa) else input$areaInput, 
              c(names(data)[1:3],input$variableInput)]
-      }
+      } 
+        
+        # data frame for missing values, columns-years, rows-variables
+        missings = as.data.frame(matrix(NA, ncol=max(fitered_data$rok)-min(fitered_data$rok)+1, nrow=ncol(fitered_data)))
+        
+        j=1
+        # add number of missing values in each year for each variable 
+        for(i in seq(min(fitered_data$rok), max(fitered_data$rok),1)){
+          
+          # number of missing values in given year and variable
+          col  = sapply(fitered_data[rok==i,], function(x) sum(is.na(x)))
+          # input to right cell
+          missings[,j] = col
+          j=j+1
+        }
+        
+        # name of columns as year
+        colnames(missings) = seq(min(fitered_data$rok), max(fitered_data$rok), 1)
+        
+        # give NA column names
+        rownames(missings) <- colnames(fitered_data)
+        
+        return(missings)
+        
+      # }
+    }) 
+    
+    # data output
+    output$dataOutput <- DT::renderDataTable({
+      input$filterData
+      isolate({
+        filtered()
+      })
     })
     
-    
-    output$dataOutput <- DT::renderDataTable({
-      input$filterAction
-      isolate({filtered()
+    # missing data table
+    output$missingsOutput <- DT::renderDataTable({
+      input$filterMissings
+      isolate({
+        missings()
       })
     })
 
@@ -179,10 +241,9 @@ shinyServer(function(input, output){
     map <- reactive({
       
         # initially no variabls, so map cannot be generated, so initially empty screen
-        if(is.null(input$variableInput2)) {
-          return(NULL)
-          
-        } else if(input$groupingTypeInput == "fixed"){
+        req(input$variableInput2)
+      
+          if(input$groupingTypeInput == "fixed"){
           
           # if fixed but automatic retun notification of error and do not still NULL
           if(input$bucketingTypeInput == 0){

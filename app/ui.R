@@ -35,7 +35,7 @@ shinyUI(fluidPage(
                                      uiOutput("areaOutput"),
 
                                      # choice of whether single year or time span
-                                     radioButtons("periodType", label = h2("Period Span"),
+                                     radioButtons("periodType", label = "Period Span",
                                                   choices = list("Single Yaar" = 0, "Multiple Years" = 1), 
                                                   selected = 0),
                                      
@@ -46,21 +46,26 @@ shinyUI(fluidPage(
                                                       uiOutput("yearsOutput")),
                                      hr(),
                                      # apply filters to prepare data statistics
-                                     actionButton("filterAction",label = "Update filters")
+                                     actionButton("filterData",label = "Show Data"),
+                                     actionButton("filterMissings",label = "Show missings")
                         ),
                         
-                        mainPanel(
-                          column(9,
-                                 hr(),
-                                 DT::dataTableOutput("dataOutput"),
- 
-                                 # plotlyOutput("plot1", width = 800, height=700),
-                                 # hr(),
-                                 # p("Some text at the bottom - maybe will be deleted.",
-                                 #   style = "font-size:15px")
-                                 
-                                 
+                        mainPanel(width = 9,
+                          br(),
+                          tabsetPanel(type = "tabs",
+                                      tabPanel("Variables", DT::dataTableOutput("dataOutput")),
+                                      tabPanel("Missings", DT::dataTableOutput("missingsOutput"))
                           )
+                          
+                          # column(9,
+                          #        hr(),
+                          #        DT::dataTableOutput("dataOutput"),
+                          # 
+                          #        # plotlyOutput("plot1", width = 800, height=700),
+                          #        # hr(),
+                          #        # p("Some text at the bottom - maybe will be deleted.",
+                          #        #   style = "font-size:15px")
+                          #        )
                         )
                       )
                       ),
@@ -90,7 +95,8 @@ shinyUI(fluidPage(
                                      # uiOutput("groupingTypeOutput"),
                                      radioButtons("groupingTypeInput",
                                                   label = "Type of grouping",
-                                                  choices  = c("random", "fixed", "sd", "equal", "pretty", "quantile", "kmeans", "hclust", "bclust", "fisher", "jenks", "dpih"),
+                                                  choices  = c("fixed", "sd", "equal", "pretty", "quantile", 
+                                                               "kmeans", "hclust", "bclust", "fisher", "jenks", "dpih"),
                                                   inline= T,
                                                   selected = "pretty"),
                                      
