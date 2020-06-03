@@ -21,7 +21,7 @@ get_interactive_map <- function(
   
   # --------------------------------------------------------------------
   
-  # informacja o zmiennej ktora jest mapowana
+  # which variables is being mapped
   message(paste0("Mapped varisle is: ", names(plot_data)[mapped_variable]))
   
   # prepare hover
@@ -68,7 +68,6 @@ get_interactive_map <- function(
         warning(paste(bucketing_type, "has changed number of groups to", groups_quantity))
         }
       }
-    
 
      # based on palette number pick appropriate number of colors, if necesarry, extend palette
       tryCatch(colors <- brewer.pal(groups_quantity, colors_palette),
@@ -76,7 +75,6 @@ get_interactive_map <- function(
                  colors <- colorRampPalette(brewer.pal(groups_quantity, colors_palette))(groups_quantity) 
                }
                )
-      
       
     # if colors palette to be reverted
     if(reverse_palette == TRUE){
