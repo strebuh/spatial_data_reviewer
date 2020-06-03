@@ -94,6 +94,21 @@ shinyUI(fluidPage(
                                      
                                      checkboxInput("staticMap", label = "Static Map", value = FALSE, width = NULL),
                                      
+                                     # additional controls for static map
+                                     conditionalPanel(condition = "input.staticMap == true",
+                                                      selectInput("staticLegendPlace",
+                                                                  label = "Legend Place",
+                                                                  choices  = c("bottomleft", "bottomright", "left", "topleft", "top",
+                                                                               "topright", "right", "center"),
+                                                                  selected = "bottomleft"),
+                                                      numericInput("staticLegendColumns",
+                                                                   label = "Legend columns",
+                                                                   value = 2,
+                                                                   min = 1,
+                                                                   max = 6,
+                                                                   step = 1)
+                                     ),
+                                     
                                      
                                      # uiOutput("groupingTypeOutput"),
                                      selectInput("groupingTypeInput",
