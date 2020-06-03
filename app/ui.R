@@ -142,22 +142,36 @@ shinyUI(fluidPage(
                                                                        )
                                                       ),
                                      hr(),
-                                     actionButton("filterAction2",label = "Prepare map"),
+                                     conditionalPanel(
+                                       condition = "input.staticMap == false",
+                                       actionButton("filterAction2",label = "Prepare map")),
+                                     conditionalPanel(
+                                       condition = "input.staticMap == true",
+                                       actionButton("filterAction3",label = "Prepare map")),
                                      downloadButton("downloadMap", "Download map")
                                      
                         ),
                         
                         mainPanel(
                           column(12,
-                                 # addSpinner(highchartOutput("mapOutput"), spin = "rotating-plane", color = "#984EA3"),
-                                 withSpinner(highchartOutput("mapOutput", height = "600px", width = "100%")),
-                                 br(),
-                                 # downloadButton("downloadMap", "Download map")
+                                 conditionalPanel(
+                                   condition = "input.staticMap == false",
+                                   textOutput("staticMapOff"),
+                                   br(),
+                                   withSpinner(highchartOutput("interactiveMapOutput", height = "600px", width = "100%"))
+                                   ),
+                                 conditionalPanel(
+                                   condition = "input.staticMap == true",
+                                   textOutput("staticMapOn"),
+                                   br(),
+                                   withSpinner(plotOutput("staticMapOutput"))
+                                   )
+                                 #, downloadButton("downloadMap", "Download map")
+                                 )
                           )
                         )
-                      )
-             ),
-             
+                      ),
+
              # -------------------------------------------------- tab 3, 4 -------------------------------------------------  
              
              tabPanel("Tab 3",

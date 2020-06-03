@@ -305,10 +305,34 @@ shinyServer(function(input, output){
         )
     })
     
-    output$mapOutput <- renderHighchart({
+    text1 <- eventReactive(input$filterAction2, {
+      paste("Static map status:",input$staticMap)
+    })
+    
+    output$staticMapOff <- renderText({
+      text1()
+    })
+    
+    output$interactiveMapOutput <- renderHighchart({
             input$filterAction2
-            isolate({map()})
+            isolate({
+              map()
+              })
           })
+    
+    text2 <- eventReactive(input$filterAction3, {
+      paste("Static map status:",input$staticMap)
+    })
+    
+    output$staticMapOn <- renderText({
+      text2()
+      })
+    
+    plot2 <- eventReactive(input$filterAction3, hist(runif(30)))
+    
+    output$staticMapOutput <- renderPlot({
+        plot2()
+      })
 
     
     
