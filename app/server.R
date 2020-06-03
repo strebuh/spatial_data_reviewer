@@ -5,6 +5,7 @@ library(htmlwidgets)
 library(highcharter)
 library(bsplus)
 library(backports)
+library(shinycssloaders)
 
 source("../scripts/get_interactive_map.R")
 
@@ -123,8 +124,9 @@ shinyServer(function(input, output){
             bs_embed_tooltip(title = "Replace underscores with break values separated by space")
         )
       })
-
     
+
+    # ---------------------------------------------------- functions -----------------------------------------------------------------------
     # function to extract numbers of breaks from breaksInput | this needs to be in reactive, because uses input that needs to be updates and 
     # needs to return a value
     fixedBreaks <- reactive({
@@ -174,7 +176,7 @@ shinyServer(function(input, output){
     # -------------------------------------------------- tab 2 -------------------------------------------------
     
     # get data for table and plot
-    mapka <- reactive({
+    map <- reactive({
       
         # initially no variabls, so map cannot be generated, so initially empty screen
         if(is.null(input$variableInput2)) {
@@ -228,35 +230,35 @@ shinyServer(function(input, output){
         
 
         get_interactive_map(
-          plot_data = dane,                                       # frame with data (variables)
-          map_json = pov_json_list,                              # spatial object  - json_list (special for highcharter)
+          plot_data = dane,                         # frame with data (variables)
+          map_json = pov_json_list,                 # spatial object  - json_list (special for highcharter)
           mapped_variable = 4,                       # index of variable for mapping (always 4) in this setting
           joining_var = "jpt_kod_je",
-          groups_quantity = ngroupsInput,                  # nmber of groups to be created in map
-          title = input$inputTitle,                   # map title
+          groups_quantity = ngroupsInput,           # nmber of groups to be created in map
+          title = input$inputTitle,                 # map title
           bucketing_seed = input$seedInput,
-          bucketing_type = input$groupingTypeInput,    # bucketing algorithm
+          bucketing_type = input$groupingTypeInput, # bucketing algorithm
           breaks = breaks,
-          colors_palette = input$inputPalette,        # coloring palette name
-          reverse_palette = FALSE                     # reverse palette
+          colors_palette = input$inputPalette,      # coloring palette name
+          reverse_palette = input$reverseColor                   # reverse palette
         )
     })
     
     output$mapOutput <- renderHighchart({
             input$filterAction2
-            isolate({mapka()})
+            isolate({map()})
           })
 
     
     
     # Downloadable csv of selected dataset ----
-    output$downloadMap <- downloadHandler(
+    output$downloadMap <- downloadHandler( #  
       filename = function() {
         paste0(input$variableInput2, "_", input$inputYear2 ,".html")
       },
       content = function(file) {
         # write.csv(datasetInput(), file, row.names = FALSE)
-        saveWidget(mapka(), file)
+        saveWidget(map(), file)
       }
     )
   })

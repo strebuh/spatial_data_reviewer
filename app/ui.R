@@ -85,10 +85,12 @@ shinyUI(fluidPage(
                                      
                                      uiOutput("paletteOutput"),
                                      
+                                     checkboxInput("reverseColor", label = "Reverse colors", value = FALSE, width = NULL),
+                                     
                                      # uiOutput("groupingTypeOutput"),
                                      radioButtons("groupingTypeInput",
                                                   label = "Type of grouping",
-                                                  choices  = c( "fixed", "sd", "equal", "pretty", "quantile", "kmeans", "hclust", "bclust", "fisher", "jenks", "dpih"),
+                                                  choices  = c("random", "fixed", "sd", "equal", "pretty", "quantile", "kmeans", "hclust", "bclust", "fisher", "jenks", "dpih"),
                                                   inline= T,
                                                   selected = "pretty"),
                                      
@@ -102,22 +104,6 @@ shinyUI(fluidPage(
                                      conditionalPanel(condition ="input.groupingTypeInput == 'kmeans' | input.groupingTypeInput == 'bclust'",
                                                       uiOutput("seedOutput")
                                                       ),
-                                     
-                                     # # if fixed
-                                     # conditionalPanel(condition ="input.groupingTypeInput == 'fixed'",
-                                     #                  # input here
-                                     # ),
-                                     
-                                     # # if fixed and automatic
-                                     # conditionalPanel(condition ="input.bucketingTypeInput == 0 & input.groupingTypeInput == 'fixed'", 
-                                     #                  uiOutput("fixedBucketMessageOutput")
-                                     # ),
-                                     
-                                     # # if fixed and manual
-                                     # conditionalPanel(condition ="input.bucketingTypeInput == 1 & input.groupingTypeInput == 'fixed'",
-                                     #                  uiOutput("ngroupsOutput")
-                                     #                  # uiOutput("fixedBucketOutput"),
-                                     # ),
 
                                      # if manual, choose number of groups, type, and
                                      conditionalPanel(condition ="input.bucketingTypeInput == 1", 
@@ -134,19 +120,18 @@ shinyUI(fluidPage(
                                                                        uiOutput("fixedBreaksTexts")
                                                                        )
                                                       ),
-                                    
                                      hr(),
-                                     # apply filters to prepare data statistics
-                                     actionButton("filterAction2",label = "Show map")
+                                     actionButton("filterAction2",label = "Prepare map"),
+                                     downloadButton("downloadMap", "Download map")
+                                     
                         ),
                         
                         mainPanel(
-                          column(9,
-                                 addSpinner(highchartOutput("mapOutput"), spin = "rotating-plane", color = "#984EA3"),
+                          column(12,
+                                 # addSpinner(highchartOutput("mapOutput"), spin = "rotating-plane", color = "#984EA3"),
+                                 withSpinner(highchartOutput("mapOutput", height = "600px", width = "100%")),
                                  br(),
-                                 downloadButton("downloadMap", "Download map")
-                                 
-                                 
+                                 # downloadButton("downloadMap", "Download map")
                           )
                         )
                       )
