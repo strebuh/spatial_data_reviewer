@@ -92,12 +92,14 @@ shinyUI(fluidPage(
                                      
                                      checkboxInput("reverseColor", label = "Reverse colors", value = FALSE, width = NULL),
                                      
+                                     checkboxInput("staticMap", label = "Static Map", value = FALSE, width = NULL),
+                                     
+                                     
                                      # uiOutput("groupingTypeOutput"),
-                                     radioButtons("groupingTypeInput",
+                                     selectInput("groupingTypeInput",
                                                   label = "Type of grouping",
                                                   choices  = c("fixed", "sd", "equal", "pretty", "quantile", 
                                                                "kmeans", "hclust", "bclust", "fisher", "jenks", "dpih"),
-                                                  inline= T,
                                                   selected = "pretty"),
                                      
                                      # type of bucketing
