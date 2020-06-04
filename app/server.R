@@ -15,8 +15,10 @@ data <- readRDS("../data/data06_18_contig_na_fill.RDS") # fread fater but could 
 # zmien nazwe zmiennej teryt
 names(data)[which(names(data) == "teryt")] = "jpt_kod_je" # ty wlaczyc wybieranie ktora zmienna jest wspolna
 
-pov_json_list <- readRDS("../data/poviaty_json_list.RDS")
+pov_json_list <- NULL
 # pov_json <- geojsonio::as.json("../data/powiaty/pow.json")
+
+pov_sp <- NULL
 
 shinyServer(function(input, output){
   
@@ -243,7 +245,22 @@ shinyServer(function(input, output){
   # })
   
   # get data for table and plot
-  map <- reactive({
+  
+  sp_map <- reactive({
+    if(is.null(pov_sp)){
+      pov_sp <- readOGR("../data/powiaty4", "powiaty")
+    }
+  })
+  
+  
+  json_list_map <- reactive({
+    if(is.null(pov_sp)){
+      message("Json map is being loaded.")
+      pov_json_list <- readRDS("../data/poviaty_json_list.RDS")
+    }
+  })
+  
+  ineractive_map <- reactive({
     
     # initially no variabls, so map cannot be generated, so initially empty screen
     req(input$variableInput2)
@@ -294,6 +311,8 @@ shinyServer(function(input, output){
       ngroupsInput <- NULL
     }
     
+    # read map first time function is used
+    pov_json_list <- json_list_map()
     
     get_interactive_map(
       plot_data = dane,                         # frame with data (variables)
@@ -310,7 +329,78 @@ shinyServer(function(input, output){
     )
   })
   
-  
+  static_map <- reactive({
+    
+    # initially no variabls, so map cannot be generated, so initially empty screen
+    req(input$variableInput2)
+    
+    if(input$groupingTypeInput == "fixed"){
+      
+      # if fixed but automatic retun notification of error and do not still NULL
+      if(input$bucketingTypeInput == 0){
+        showNotification("Fixed type cannot be automatic!",
+                         type="error",
+                         duration = 7)
+        return(NULL)
+        
+      } else {
+        
+        # if fixed but manual, generate break from provided numbers  
+        # else if(input$bucketingTypeInput == 0 & input$groupingTypeInput == "fixed"){
+        breaks <- fixedBreaks()
+        
+        # if breaks are not correct (not numbers, that were coerced to NA) notify and NULL
+        if(anyNA(breaks)){
+          showNotification("All breaks must be numeric!", 
+                           type="error",
+                           duration = 7)
+          return(NULL)
+          
+          # if fewer than expected breaks nofity error and return NULL
+        } else if(length(breaks) != input$ngroupsInput+1){
+          showNotification(paste0("Number of groups doesn't match number of breaks!\n Required ",
+                                  input$ngroupsInput + 1," digits"),
+                           type="error",
+                           duration = 7)
+          return(NULL)
+        }
+      }
+    }
+    
+    # think of replacing notify by  validate() to get information <- write funciton for these
+    
+    # do not show anyting at the beggining, otherwise error
+    dane <- data[data$rok == input$inputYear2, 
+                 c(names(data)[2:3], "jpt_kod_je", input$variableInput2)] 
+    
+    # if one recalculates the map in the same session, change number of groups
+    if(input$bucketingTypeInput == 1){
+      ngroupsInput <- input$ngroupsInput
+    } else {
+      ngroupsInput <- NULL
+    }
+    
+    # read map first time function is used
+    pov_sp <- sp_map()
+
+    get_static_map(
+      plot_data = dane,                                  # frame with data (variables)
+      map_sp = pov_sp,                                   # spatial object  - json_list (special for highcharter)
+      mapped_variable = 4,                            # index of variable for mapping (always 4) in this setting
+      joining_var = "jpt_kod_je",
+      groups_quantity = ngroupsInput,                     # nmber of groups to be created in map
+      title = input$inputTitle,                                      # map title
+      bucketing_seed = input$seedInput,                             # seed if bclust or kmeans
+      bucketing_type = input$groupingTypeInput,                  # bucketing algorithm
+      breaks = breaks,
+      colors_palette = input$inputPalette,                    # coloring palette name
+      reverse_palette = input$reverseColor,                       # reverse palette
+      legend_place = input$staticLegendPlace,                # "bottomleft", "left", "topleft", "top", "topright", "right" and "center".
+      ncol_legend = input$staticLegendColumns,
+      save_path = NULL
+    )
+    
+  })
   # ----------------------------------------------- tab 2 outoputs -------------------------------------------------
   
   # --- output interactve ---
@@ -326,7 +416,7 @@ shinyServer(function(input, output){
   output$interactiveMapOutput <- renderHighchart({
     input$filterAction2
     isolate({
-      map()
+      ineractive_map()
     })
   })
   
@@ -343,7 +433,7 @@ shinyServer(function(input, output){
   plot2 <- eventReactive(input$filterAction3, hist(runif(30)))
   
   output$staticMapOutput <- renderPlot({
-    plot2()
+    static_map()
   })
   
   
