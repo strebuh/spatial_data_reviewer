@@ -133,27 +133,11 @@ shinyServer(function(input, output){
       })
     
 
-    # ---------------------------------------------------- functions -----------------------------------------------------------------------
-    # function to extract numbers of breaks from breaksInput | this needs to be in reactive, because uses input that needs to be updates and 
-    # needs to return a value
-    fixedBreaks <- reactive({
-      # separate text inputs
-      breaks <- as.numeric(unlist(stringr::str_split(input$breaksInput, pattern = "\\s+")))
-    })
-    
-    # # dependent on input, and need to reevaluate and return so in reactive
-    # not_fixed_automatic <- reactive({
-    #   if(input$bucketingTypeInput == 0){
-    #     showNotification("Fixed and  type cannot be automatic!",
-    #                      type="error",
-    #                      duration = 7)
-    #     return(NULL)
-    #   }
-    # })
-
-  # -------------------------------------------------- outoputs -------------------------------------------------
   
-  # -------------------------------------------------- tab 1 -------------------------------------------------  
+  # -------------------------------------------------- tab 1 ----------------------------------------------------
+    
+    # --------------------------------------------- tab 1 functions -------------------------------------------
+    
   
   # get data for table and plot
     filtered <- reactive({
@@ -219,6 +203,8 @@ shinyServer(function(input, output){
       # }
     }) 
     
+    # ----------------------------------------------- tab 1 outoputs -------------------------------------------------
+    
     # data output
     output$dataOutput <- DT::renderDataTable({
       input$filterData
@@ -236,6 +222,25 @@ shinyServer(function(input, output){
     })
 
     # -------------------------------------------------- tab 2 -------------------------------------------------
+    
+    # --------------------------------------------- tab 2 functions -------------------------------------------
+    
+    # function to extract numbers of breaks from breaksInput | this needs to be in reactive, because uses input that needs to be updates and 
+    # needs to return a value
+    fixedBreaks <- reactive({
+      # separate text inputs
+      breaks <- as.numeric(unlist(stringr::str_split(input$breaksInput, pattern = "\\s+")))
+    })
+    
+    # # dependent on input, and need to reevaluate and return so in reactive
+    # not_fixed_automatic <- reactive({
+    #   if(input$bucketingTypeInput == 0){
+    #     showNotification("Fixed and  type cannot be automatic!",
+    #                      type="error",
+    #                      duration = 7)
+    #     return(NULL)
+    #   }
+    # })
     
     # get data for table and plot
     map <- reactive({
@@ -305,8 +310,13 @@ shinyServer(function(input, output){
         )
     })
     
+    
+    # ----------------------------------------------- tab 2 outoputs -------------------------------------------------
+    
+    # --- output interactve ---
+    
     text1 <- eventReactive(input$filterAction2, {
-      paste("Static map status:",input$staticMap)
+      paste("Static map status:", input$staticMap)
     })
     
     output$staticMapOff <- renderText({
@@ -319,6 +329,8 @@ shinyServer(function(input, output){
               map()
               })
           })
+    
+    # --- output static ---
     
     text2 <- eventReactive(input$filterAction3, {
       paste("Static map status:",input$staticMap)
@@ -335,6 +347,7 @@ shinyServer(function(input, output){
       })
 
     
+    # --- output download ---
     
     # Downloadable csv of selected dataset ----
     output$downloadMap <- downloadHandler( #  
