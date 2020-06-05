@@ -92,7 +92,7 @@ shinyUI(fluidPage(
                                      
                                      checkboxInput("reverseColor", label = "Reverse colors", value = FALSE, width = NULL),
                                      
-                                     checkboxInput("staticMap", label = "Static Map", value = FALSE, width = NULL),
+                                     checkboxInput("staticMap", label = "Static Map", value = T, width = NULL),
                                      
                                      # additional controls for static map
                                      conditionalPanel(condition = "input.staticMap == true",
@@ -144,10 +144,10 @@ shinyUI(fluidPage(
                                      hr(),
                                      conditionalPanel(
                                        condition = "input.staticMap == false",
-                                       actionButton("filterAction2",label = "Prepare map")),
+                                       actionButton("filterAction2",label = "Interactive Map")),
                                      conditionalPanel(
                                        condition = "input.staticMap == true",
-                                       actionButton("filterAction3",label = "Prepare map")),
+                                       actionButton("filterAction3",label = "Static Map")),
                                      downloadButton("downloadMap", "Download map")
                                      
                         ),
@@ -164,7 +164,7 @@ shinyUI(fluidPage(
                                    condition = "input.staticMap == true",
                                    textOutput("staticMapOn"),
                                    br(),
-                                   withSpinner(plotOutput("staticMapOutput"))
+                                   withSpinner(plotOutput("staticMapOutput",  height = "600px", width = "100%"))
                                    )
                                  #, downloadButton("downloadMap", "Download map")
                                  )
