@@ -195,7 +195,12 @@ shinyUI(fluidPage(
                                                                actionButton("filterAction3",label = "Static Map"))
                                               ),
                                        column(6,
-                                              myDownloadButton("downloadMap", "Download map")
+                                              conditionalPanel(condition = "input.staticMap == false",
+                                                               myDownloadButton("downloadInteractMap", "Download map")
+                                                               ),
+                                              conditionalPanel(condition = "input.staticMap == true",
+                                                               myDownloadButton("downloadStaticMap", "Download map")
+                                                               )
                                               )
                                        )
                                      ),

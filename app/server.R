@@ -434,11 +434,6 @@ shinyServer(function(input, output){
 
   plot1 <- eventReactive(input$filterAction2, ineractive_map())
   output$interactiveMapOutput <- renderHighchart({
-    # input$filterAction2
-    # click1()
-    # isolate({
-    #   ineractive_map()
-    # })
     plot1()
   })
 
@@ -460,13 +455,22 @@ shinyServer(function(input, output){
   # --- output download ---
 
   # Downloadable csv of selected dataset ----
-  output$downloadMap <- downloadHandler( #
+  output$downloadInteractMap <- downloadHandler(
     filename = function() {
       paste0(input$variableInput2, "_", input$inputYear2 ,".html")
     },
     content = function(file) {
-      # write.csv(datasetInput(), file, row.names = FALSE)
       saveWidget(ineractive_map(), file)
+    }
+  )
+  
+  # Downloadable csv of selected dataset ----
+  output$downloadStaticMap <- downloadHandler(
+    filename = function() {
+      paste0(input$variableInput2, "_", input$inputYear2 ,".png")
+    },
+    content = function(file) {
+      ggsave(file, static_map(), width = 12, height = 12, units = "cm")
     }
   )
 
