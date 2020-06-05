@@ -6,8 +6,11 @@ library(highcharter)
 library(bsplus)
 library(backports)
 library(shinycssloaders)
+library(rgdal)
 
+source("../scripts/get_static_map.R")
 source("../scripts/get_interactive_map.R")
+source("../scripts/get_ggplot_map.R")
 
 data <- readRDS("../data/data06_18_contig_na_fill.RDS") # fread fater but could not deal with long file names
 # data <- readRDS("data/data06_18_contig_na_fill.RDS") # fread fater but could not deal with long file names
@@ -248,7 +251,8 @@ shinyServer(function(input, output){
   
   sp_map <- reactive({
     if(is.null(pov_sp)){
-      pov_sp <- readOGR("../data/powiaty4", "powiaty")
+      message("Shp map is being loaded.")
+      pov_sp <- readOGR("../data/powiaty4", "powiaty", encoding = "UTF-8", stringsAsFactors = F)
     }
   })
   
@@ -383,21 +387,35 @@ shinyServer(function(input, output){
     # read map first time function is used
     pov_sp <- sp_map()
 
-    get_static_map(
+    # get_static_map(
+    #   plot_data = dane,                                  # frame with data (variables)
+    #   map_sp = pov_sp,                                   # spatial object  - json_list (special for highcharter)
+    #   mapped_variable = 4,                            # index of variable for mapping (always 4) in this setting
+    #   joining_var = "jpt_kod_je",
+    #   groups_quantity = ngroupsInput,                     # nmber of groups to be created in map
+    #   title = input$inputTitle,                                      # map title
+    #   bucketing_seed = input$seedInput,                             # seed if bclust or kmeans
+    #   bucketing_type = input$groupingTypeInput,                  # bucketing algorithm
+    #   breaks = breaks,
+    #   colors_palette = input$inputPalette,                    # coloring palette name
+    #   reverse_palette = input$reverseColor,                       # reverse palette
+    #   legend_place = input$staticLegendPlace,                # "bottomleft", "left", "topleft", "top", "topright", "right" and "center".
+    #   ncol_legend = input$staticLegendColumns,
+    #   save_path = NULL
+    # )
+    
+    get_ggplot_map(
       plot_data = dane,                                  # frame with data (variables)
       map_sp = pov_sp,                                   # spatial object  - json_list (special for highcharter)
       mapped_variable = 4,                            # index of variable for mapping (always 4) in this setting
       joining_var = "jpt_kod_je",
       groups_quantity = ngroupsInput,                     # nmber of groups to be created in map
-      title = input$inputTitle,                                      # map title
+      title = "static ggplot",                                      # map title
       bucketing_seed = input$seedInput,                             # seed if bclust or kmeans
       bucketing_type = input$groupingTypeInput,                  # bucketing algorithm
       breaks = breaks,
       colors_palette = input$inputPalette,                    # coloring palette name
       reverse_palette = input$reverseColor,                       # reverse palette
-      legend_place = input$staticLegendPlace,                # "bottomleft", "left", "topleft", "top", "topright", "right" and "center".
-      ncol_legend = input$staticLegendColumns,
-      save_path = NULL
     )
     
   })
@@ -413,29 +431,30 @@ shinyServer(function(input, output){
     text1()
   })
   
+  plot1 <- eventReactive(input$filterAction2, ineractive_map())
   output$interactiveMapOutput <- renderHighchart({
-    input$filterAction2
-    isolate({
-      ineractive_map()
-    })
+    # input$filterAction2
+    # click1()
+    # isolate({
+    #   ineractive_map()
+    # })
+    plot1()
   })
   
   # --- output static ---
   
   text2 <- eventReactive(input$filterAction3, {
-    paste("Static map status:",input$staticMap)
+    paste("Static map status:", input$staticMap)
   })
   
   output$staticMapOn <- renderText({
     text2()
   })
   
-  plot2 <- eventReactive(input$filterAction3, hist(runif(30)))
-  
+  plot2 <- eventReactive(input$filterAction3, static_map())
   output$staticMapOutput <- renderPlot({
-    static_map()
+    plot2()
   })
-  
   
   # --- output download ---
   
@@ -446,7 +465,7 @@ shinyServer(function(input, output){
     },
     content = function(file) {
       # write.csv(datasetInput(), file, row.names = FALSE)
-      saveWidget(map(), file)
+      saveWidget(ineractive_map(), file)
     }
   )
 })
