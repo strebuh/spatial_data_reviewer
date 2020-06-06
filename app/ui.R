@@ -150,27 +150,43 @@ shinyUI(fluidPage(
                                      choices = list("RDS" = 0, "CSV" = 1), 
                                      selected = 0,
                                      inline= T),
-                        # actionButton("showData", label = "Show data"),
-                        
-                        # Input: Select a file ----
-                        conditionalPanel(condition = "input.fileType == 1",
-                                         fileInput("dataFile", "Choose CSV File",
-                                                   multiple = FALSE,
-                                                   accept = c(".csv")
-                                                   )
-                                         ),
-                        conditionalPanel(condition = "input.fileType == 0",
-                                         fileInput("dataFile", "Choose RDS File",
-                                                   multiple = FALSE,
-                                                   accept = c(".rds",
-                                                              ".RDS")
-
-                                                   )
-                                         )
+                        # conditionalPanel(condition = "input.fileType == 0",
+                        #                  actionButton("showRDSdata", label = "Show data")
+                        #                  ),
+                        # conditionalPanel(condition = "input.fileType == 1",
+                        #                  actionButton("showCSVdata", label = "Show data")
+                        #                  ),
+                        # # Input: Select a file ----
+                        # conditionalPanel(condition = "input.fileType == 0",
+                        #                  fileInput("dataFile", "Choose RDS File",
+                        #                            multiple = FALSE,
+                        #                            accept = c(".rds",
+                        #                                       ".RDS")
+                        #                            )
+                        #                  ),
+                        # conditionalPanel(condition = "input.fileType == 1",
+                        #                  fileInput("dataFile", "Choose CSV File",
+                        #                            multiple = FALSE,
+                        #                            accept = c(".csv")
+                        #                            )
+                        #                  ),
+                        actionButton("showData", label = "Show data"),
+                        fileInput("dataFile", "Choose CSV/RDS File",
+                                  multiple = FALSE,
+                                  accept = c(".csv", ".rds", ".RDS")
+                                  )
+                        # )
                         ),
                       
-                      mainPanel(DT::dataTableOutput("contents")
-                                )
+                      mainPanel(
+                        # conditionalPanel(condition = "input.fileType == 0",
+                        #                  DT::dataTableOutput("RDScontents")
+                        #                  ),
+                        # conditionalPanel(condition = "input.fileType == 1",
+                        #                  DT::dataTableOutput("CSVcontents")
+                        #                  )
+                        DT::dataTableOutput("contents")
+                        )
                       ),
                       
                       # , p("This is a place for some explonation", target="_blank"), ".",style = "font-size:25px"),

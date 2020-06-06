@@ -18,6 +18,8 @@ names(data)[which(names(data) == "teryt")] = "jpt_kod_je" # ty wlaczyc wybierani
 pov_json_list <- readRDS("../data/poviaty_json_list.RDS")
 # pov_json <- geojsonio::as.json("../data/powiaty/pow.json")
 
+options(shiny.maxRequestSize=30*1024^2)
+
 shinyServer(function(input, output){
   
   # -------------------------------------------------- sidebar panel inputs -------------------------------------------------
@@ -327,47 +329,94 @@ shinyServer(function(input, output){
 
 
 
-    uploadCSV <- reactive({
-      
-      req(input$dataFile)
-      # tryCatch(
-      #   {
-            df <- read.csv(input$dataFile$datapath,
-                           # header = input$header,
-                           # sep = input$sep,
-                           # quote = input$quote,
-                           encoding = "UTF-8",
-                           stringsAsFactors = F)
-        # },
-        # 
-        # error = function(e) {
-        #   # return a safeError if a parsing error occurs
-        #   stop(safeError(e))
-        # }
-      # )
-      
-    })
+    # uploadCSV <- reactive({
+    #   
+    #   req(input$dataFile)
+    #   # tryCatch(
+    #   #   {
+    #         df <- read.csv(input$dataFile$datapath,
+    #                        # header = input$header,
+    #                        # sep = input$sep,
+    #                        # quote = input$quote,
+    #                        encoding = "UTF-8",
+    #                        stringsAsFactors = F)
+    #     # },
+    #     # 
+    #     # error = function(e) {
+    #     #   # return a safeError if a parsing error occurs
+    #     #   stop(safeError(e))
+    #     # }
+    #   # )
+    #   
+    # })
+    # 
+    # uploadRDS <- reactive({
+    #   
+    #   req(input$dataFile)
+    #   # tryCatch(
+    #   df <- readRDS(input$dataFile$datapath)
+    #   
+    #   # }
+    #   # },
+    #   # 
+    #   # error = function(e) {
+    #   #   # return a safeError if a parsing error occurs
+    #   #   stop(safeError(e))
+    #   # }
+    #   # )
+    # })
     
-    uploadRDS <- reactive({
+    upload <- reactive({
       
       req(input$dataFile)
-      # tryCatch(
-      df <- readRDS(input$dataFile$datapath)
       
-      # }
-      # },
-      # 
-      # error = function(e) {
-      #   # return a safeError if a parsing error occurs
-      #   stop(safeError(e))
-      # }
-      # )
+      if((input$fileType != 0 & !grepl("(.rds)$|(.RDS)$", input$dataFile$datapath))|
+         (input$fileType != 1 & grepl("(.csv)$|(.CSV)$", input$dataFile$datapath))
+         ){
+           
+           showNotification("File format doesn't match the choice!",
+                            type="error",
+                            duration = 7)
+           return(NULL)
+         }
+      if(input$fileType == 0){
+        
+        df <- readRDS(input$dataFile$datapath)
+        
+      } else if(input$fileType == 1){
+        
+        df <- read.csv(input$dataFile$datapath,
+                       # header = input$header,
+                       # sep = input$sep,
+                       # quote = input$quote,
+                       encoding = "UTF-8",
+                       stringsAsFactors = F)
+      }
+      return(df)
     })
 
+    # output$RDScontents  <- DT::renderDataTable({
+    #   input$showRDSdata
+    #   isolate({
+    #     # uploadRDS()
+    #     upload()
+    #     })
+    #   })
+    # 
+    # output$CSVcontents  <- DT::renderDataTable({
+    #   input$showCSVdata
+    #   isolate({
+    #     # uploadCSV()
+    #     upload()
+    #   })
+    
     output$contents  <- DT::renderDataTable({
-      if(input$fileType == 1) uploadCSV()
-      if(input$fileType == 0) uploadRDS()
+      input$showData
+      isolate({
+        # uploadCSV()
+        upload()
       })
+    })
     
 })
     
