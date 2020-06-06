@@ -160,32 +160,6 @@ shinyServer(function(input, output){
   
   # -------------------------------------------------- tab 1 -------------------------------------------------  
   
-  # uploadCSV <- reactive({
-  #   req(input$dataFile)
-  #   # tryCatch({
-  #         df <- read.csv(input$dataFile$datapath,
-  #                        # header = input$header,
-  #                        # sep = input$sep,
-  #                        # quote = input$quote,
-  #                        encoding = "UTF-8",
-  #                        stringsAsFactors = F)
-  #     # },
-  #     # error = function(e) {
-  #     #   # return a safeError if a parsing error occurs
-  #     #   stop(safeError(e))
-  #     # })
-  # })
-  # uploadRDS <- reactive({
-  #   req(input$dataFile)
-  #   # tryCatch({
-  #   df <- readRDS(input$dataFile$datapath)
-  #   # },
-  #   # error = function(e) {
-  #   #   # return a safeError if a parsing error occurs
-  #   #   stop(safeError(e))
-  #   # })
-  # })
-  
   # file upload
   upload <- reactive({
     
@@ -301,7 +275,6 @@ shinyServer(function(input, output){
   output$contents  <- DT::renderDataTable({
     input$showData
     isolate({
-      # uploadCSV()
       upload()
     })
   })
@@ -315,16 +288,6 @@ shinyServer(function(input, output){
     # separate text inputs
     breaks <- as.numeric(unlist(stringr::str_split(input$breaksInput, pattern = "\\s+")))
   })
-  
-  # # dependent on input, and need to reevaluate and return so in reactive
-  # not_fixed_automatic <- reactive({
-  #   if(input$bucketingTypeInput == 0){
-  #     showNotification("Fixed and  type cannot be automatic!",
-  #                      type="error",
-  #                      duration = 7)
-  #     return(NULL)
-  #   }
-  # })
   
   # get data for table and plot
   map <- reactive({
