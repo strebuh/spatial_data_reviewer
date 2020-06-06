@@ -334,6 +334,13 @@ shinyServer(function(input, output){
     )
   })
 
+  # function to update status of download static
+  # staticDownloadStatus <- reactive({
+  #   req(input$download_status)
+  #   status <- input$download_status - 1
+  # })
+  
+  
   static_map <- reactive({
 
     # initially no variabls, so map cannot be generated, so initially empty screen
@@ -388,38 +395,45 @@ shinyServer(function(input, output){
     # read map first time function is used
     pov_sp <- sp_map()
 
-    # get_static_map(
-    #   plot_data = dane,                                  # frame with data (variables)
-    #   map_sp = pov_sp,                                   # spatial object  - json_list (special for highcharter)
-    #   mapped_variable = 4,                            # index of variable for mapping (always 4) in this setting
-    #   joining_var = "jpt_kod_je",
-    #   groups_quantity = ngroupsInput,                     # nmber of groups to be created in map
-    #   title = input$inputTitle,                                      # map title
-    #   bucketing_seed = input$seedInput,                             # seed if bclust or kmeans
-    #   bucketing_type = input$groupingTypeInput,                  # bucketing algorithm
-    #   breaks = breaks,
-    #   colors_palette = input$inputPalette,                    # coloring palette name
-    #   reverse_palette = input$reverseColor,                       # reverse palette
-    #   legend_place = input$staticLegendPlace,                # "bottomleft", "left", "topleft", "top", "topright", "right" and "center".
-    #   ncol_legend = input$staticLegendColumns,
-    #   save_path = NULL
-    # )
+    if(input$ggplotMap == FALSE & input$staticMap == TRUE){
+      
+      # download_status <- input$downloadStaticMap - staticDownloadStatus() 
+      
+      get_static_map(
+        plot_data = dane,                                  # frame with data (variables)
+        map_sp = pov_sp,                                   # spatial object  - json_list (special for highcharter)
+        mapped_variable = 4,                            # index of variable for mapping (always 4) in this setting
+        joining_var = "jpt_kod_je",
+        groups_quantity = ngroupsInput,                     # nmber of groups to be created in map
+        title = input$inputTitle,                                      # map title
+        bucketing_seed = input$seedInput,                             # seed if bclust or kmeans
+        bucketing_type = input$groupingTypeInput,                  # bucketing algorithm
+        breaks = breaks,
+        colors_palette = input$inputPalette,                    # coloring palette name
+        reverse_palette = input$reverseColor,                       # reverse palette
+        legend_place = input$staticLegendPlace,                # "bottomleft", "left", "topleft", "top", "topright", "right" and "center".
+        ncol_legend = input$staticLegendColumns,
+        save_path = NULL
+      )
+    } else {
+      get_ggplot_map(
+        plot_data = dane,                                  # frame with data (variables)
+        map_sp = pov_sp,                                   # spatial object  - json_list (special for highcharter)
+        mapped_variable = 4,                            # index of variable for mapping (always 4) in this setting
+        joining_var = "jpt_kod_je",
+        groups_quantity = ngroupsInput,                     # nmber of groups to be created in map
+        title = "static ggplot",                                      # map title
+        bucketing_seed = input$seedInput,                             # seed if bclust or kmeans
+        bucketing_type = input$groupingTypeInput,                  # bucketing algorithm
+        breaks = breaks,
+        colors_palette = input$inputPalette,                    # coloring palette name
+        reverse_palette = input$reverseColor,                       # reverse palette
+      )
+    }
 
-    get_ggplot_map(
-      plot_data = dane,                                  # frame with data (variables)
-      map_sp = pov_sp,                                   # spatial object  - json_list (special for highcharter)
-      mapped_variable = 4,                            # index of variable for mapping (always 4) in this setting
-      joining_var = "jpt_kod_je",
-      groups_quantity = ngroupsInput,                     # nmber of groups to be created in map
-      title = "static ggplot",                                      # map title
-      bucketing_seed = input$seedInput,                             # seed if bclust or kmeans
-      bucketing_type = input$groupingTypeInput,                  # bucketing algorithm
-      breaks = breaks,
-      colors_palette = input$inputPalette,                    # coloring palette name
-      reverse_palette = input$reverseColor,                       # reverse palette
-    )
 
   })
+  
   # ----------------------------------------------- tab 2 outoputs -------------------------------------------------
 
   # --- output interactve ---
@@ -464,8 +478,17 @@ shinyServer(function(input, output){
     }
   )
   
-  # Downloadable csv of selected dataset ----
-  output$downloadStaticMap <- downloadHandler(
+  # # Downloadable csv of selected dataset ----
+  # output$downloadStaticMap <- downloadHandler(
+  #   filename = function() {
+  #     paste0(input$variableInput2, "_", input$inputYear2 ,".png")
+  #   },
+  #   content = function(file) {
+  #     static_map()
+  #   }
+  # )
+
+  output$downloadggplotMap <- downloadHandler(
     filename = function() {
       paste0(input$variableInput2, "_", input$inputYear2 ,".png")
     },

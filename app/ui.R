@@ -113,8 +113,15 @@ shinyUI(fluidPage(
                                        column(4,
                                               checkboxInput("staticMap",
                                                             label = "Static Map",
-                                                            value = T
-                                                            ))
+                                                            value = F
+                                                            )
+                                              ),
+                                       column(4,
+                                              checkboxInput("ggplotMap",
+                                                            label = "GGplot Map",
+                                                            value = F
+                                                            )
+                                              )
                                        ),
 
                                      # checkboxInput("reverseColor", label = "Reverse colors", value = FALSE, width = NULL),
@@ -123,7 +130,7 @@ shinyUI(fluidPage(
 
 
                                      # additional controls for static map
-                                     conditionalPanel(condition = "input.staticMap == true",
+                                     conditionalPanel(condition = "input.staticMap == true && input.ggplotMap == false",
                                                       fluidRow(
                                                         column(6,
                                                                selectInput("staticLegendPlace",
@@ -198,9 +205,12 @@ shinyUI(fluidPage(
                                               conditionalPanel(condition = "input.staticMap == false",
                                                                myDownloadButton("downloadInteractMap", "Download map")
                                                                ),
-                                              conditionalPanel(condition = "input.staticMap == true",
+                                              conditionalPanel(condition = "input.staticMap == true && input.ggplotMap == false",
                                                                myDownloadButton("downloadStaticMap", "Download map")
-                                                               )
+                                                               ),
+                                              conditionalPanel(condition = "input.staticMap == true && input.ggplotMap == true",
+                                                               myDownloadButton("downloadggplotMap", "Download map")
+                                              )
                                               )
                                        )
                                      ),
