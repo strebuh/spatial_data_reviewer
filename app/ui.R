@@ -50,29 +50,24 @@ shinyUI(fluidPage(
                                      conditionalPanel(condition="input.periodType == 1", 
                                                       uiOutput("yearsOutput")),
                                      hr(),
-                                     # apply filters to prepare data statistics
-                                     actionButton("filterData",label = "Show Data"),
-                                     actionButton("filterMissings",label = "Show missings")
+                                     
+                                     fluidRow(column(6, align="center",
+                                                     actionButton("filterData",label = "Show Data")),
+                                              column(6, align="left",
+                                                     actionButton("filterMissings",label = "Show missings"))
+                                              )
+                                     
                         ),
                         
                         mainPanel(width = 9,
                           br(),
                           tabsetPanel(type = "tabs",
                                       tabPanel("Variables", DT::dataTableOutput("dataOutput")),
-                                      tabPanel("Missings", DT::dataTableOutput("missingsOutput"))
+                                      tabPanel("Missings", DT::dataTableOutput("missingsOutput")
+                                               )
+                                      )
                           )
-                          
-                          # column(9,
-                          #        hr(),
-                          #        DT::dataTableOutput("dataOutput"),
-                          # 
-                          #        # plotlyOutput("plot1", width = 800, height=700),
-                          #        # hr(),
-                          #        # p("Some text at the bottom - maybe will be deleted.",
-                          #        #   style = "font-size:15px")
-                          #        )
                         )
-                      )
                       ),
              
              # -------------------------------------------------- tab 2 -------------------------------------------------  
@@ -103,67 +98,55 @@ shinyUI(fluidPage(
 
 
                                      fluidRow(
-                                       column(4,
+                                       column(6,
                                               checkboxInput("reverseColor",
                                                             label = "Reverse color",
                                                             value = FALSE,
                                                             # status = "success"
                                                             )
                                               ),
-                                       column(4,
+                                       column(6,
                                               checkboxInput("staticMap",
                                                             label = "Static Map",
-                                                            value = F
-                                                            )
-                                              ),
-                                       column(4,
-                                              checkboxInput("ggplotMap",
-                                                            label = "GGplot Map",
                                                             value = F
                                                             )
                                               )
                                        ),
 
-                                     # checkboxInput("reverseColor", label = "Reverse colors", value = FALSE, width = NULL),
-                                     #
-                                     # checkboxInput("staticMap", label = "Static Map", value = T, width = NULL),
 
-
-                                     # additional controls for static map
-                                     conditionalPanel(condition = "input.staticMap == true && input.ggplotMap == false",
+                                     # additional controls for static map, sizes of title and legend
+                                     conditionalPanel(condition = "input.staticMap == true",
                                                       fluidRow(
-                                                        column(6,
-                                                               selectInput("staticLegendPlace",
-                                                                           label = "Legend Place",
-                                                                           choices  = c("bottomleft", "bottomright",
-                                                                                        "left", "topleft",
-                                                                                        "top","topright",
-                                                                                        "right", "center"),
-                                                                           selected = "bottomleft"),
+                                                        column(4,
+                                                               numericInput("titleSize",
+                                                                           label = "Title",
+                                                                           value = 15,
+                                                                           min = 8,
+                                                                           max = 20,
+                                                                           step = 1,
+                                                                           width = "100%")
                                                         ),
-                                                        column(6,
-                                                               numericInput("staticLegendColumns",
-                                                                            label = "Legend columns",
-                                                                            value = 2,
-                                                                            min = 1,
-                                                                            max = 6,
-                                                                            step = 1)
+                                                        column(4,
+                                                               numericInput("legendTitleSize",
+                                                                            label = "Legend",
+                                                                            value = 13,
+                                                                            min = 8,
+                                                                            max = 20,
+                                                                            step = 1,
+                                                                            width = "100%")
+                                                        ),
+                                                        column(4,
+                                                               numericInput("legendLabelSize",
+                                                                            label = "Labels",
+                                                                            value = 12,
+                                                                            min = 8,
+                                                                            max = 20,
+                                                                            step = 1,
+                                                                            width = "100%"
+                                                                            )
                                                                )
                                                         )
                                                       ),
-
-                                                      #,
-                                                      # selectInput("staticLegendPlace",
-                                                      #             label = "Legend Place",
-                                                      #             choices  = c("bottomleft", "bottomright", "left", "topleft", "top",
-                                                      #                          "topright", "right", "center"),
-                                                      #             selected = "bottomleft"),
-                                                      # numericInput("staticLegendColumns",
-                                                      #              label = "Legend columns",
-                                                      #              value = 2,
-                                                      #              min = 1,
-                                                      #              max = 6,
-                                                      #              step = 1)
 
 
                                      # type of bucketing
@@ -195,21 +178,18 @@ shinyUI(fluidPage(
                                      
                                      hr(),
                                      fluidRow(
-                                       column(6,
+                                       column(6, align="center",
                                               conditionalPanel(condition = "input.staticMap == false",
-                                                               actionButton("filterAction2",label = "Interactive Map")),
+                                                               actionButton("filterAction2",label = "Prepare")),
                                               conditionalPanel(condition = "input.staticMap == true",
-                                                               actionButton("filterAction3",label = "Static Map"))
+                                                               actionButton("filterAction3",label = "Prepare"))
                                               ),
-                                       column(6,
+                                       column(6, align="center",
                                               conditionalPanel(condition = "input.staticMap == false",
-                                                               myDownloadButton("downloadInteractMap", "Download map")
+                                                               myDownloadButton("downloadInteractMap", "Download")
                                                                ),
-                                              conditionalPanel(condition = "input.staticMap == true && input.ggplotMap == false",
-                                                               myDownloadButton("downloadStaticMap", "Download map")
-                                                               ),
-                                              conditionalPanel(condition = "input.staticMap == true && input.ggplotMap == true",
-                                                               myDownloadButton("downloadggplotMap", "Download map")
+                                              conditionalPanel(condition = "input.staticMap == true",
+                                                               myDownloadButton("downloadggplotMap", "Download")
                                               )
                                               )
                                        )
@@ -219,21 +199,20 @@ shinyUI(fluidPage(
                           column(12, align="center",
                                  conditionalPanel(
                                    condition = "input.staticMap == false",
-                                   textOutput("staticMapOff"),
+                                   # textOutput("staticMapOff"),
                                    br(),
                                    withSpinner(highchartOutput("interactiveMapOutput", height = "600px", width = "100%"))
                                    ),
                                  conditionalPanel(
                                    condition = "input.staticMap == true",
-                                   textOutput("staticMapOn"),
+                                   # textOutput("staticMapOn"),
                                    br(),
-                                   withSpinner(plotOutput("staticMapOutput", height = "600px", width = "85%"))
+                                   withSpinner(plotOutput("staticMapOutput", height = "500px", width = "70%"))
                                    )
                                  )
                           )
                       ),
-                                 # , downloadButton("downloadMap", "Download map")
-                                                       
+
 
              # -------------------------------------------------- tab 3, 4 -------------------------------------------------  
              

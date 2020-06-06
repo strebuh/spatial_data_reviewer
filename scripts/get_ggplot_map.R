@@ -10,13 +10,16 @@ get_ggplot_map <- function(
   mapped_variable,                            # index of variable for mapping (always 4) in this setting
   joining_var = "jpt_kod_je",
   groups_quantity = NULL,                     # nmber of groups to be created in map
-  title,                                      # map title
   bucketing_seed = NULL,                             # seed if bclust or kmeans
   bucketing_type = "hclust",                  # bucketing algorithm
   breaks = c(),
   colors_palette = "BuPu",                    # coloring palette name
   reverse_palette = FALSE,                       # reverse palette
   theme = theme_void(),
+  title,
+  title_size = 14,
+  legend_title_size = 13,
+  legend_label_size = 12,
   ...
 ){
   
@@ -106,9 +109,9 @@ get_ggplot_map <- function(
     scale_fill_manual(values = colors) +
     ggtitle(title) +
     theme_void() + 
-    theme(plot.title = element_text(hjust = 0.5, size = 15, face = "bold"),
-          legend.text=element_text(size=12),
-          legend.title=element_text(size=13))
+    theme(plot.title = element_text(hjust = 0.5, size = title_size, face = "bold"),
+          legend.text=element_text(size = legend_title_size),
+          legend.title=element_text(size = legend_label_size))
   
   return(map)
 }
