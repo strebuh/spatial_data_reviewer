@@ -9,11 +9,13 @@ library(shinycssloaders)
 
 source("../scripts/get_interactive_map.R")
 
-data <- readRDS("../data/data06_18_contig_na_fill.RDS") # fread fater but could not deal with long file names
-# data <- readRDS("data/data06_18_contig_na_fill.RDS") # fread fater but could not deal with long file names
+# input$dataFile
+data <- NULL
+# data <- readRDS("../data/data06_18_contig_na_fill.RDS") 
+# data <- readRDS("../data/data06_18_contig_na_fill.RDS") 
+# data <- readRDS("data/data06_18_contig_na_fill.RDS")
 
-# zmien nazwe zmiennej teryt
-names(data)[which(names(data) == "teryt")] = "jpt_kod_je" # ty wlaczyc wybieranie ktora zmienna jest wspolna
+# names(data)[which(names(data) == "teryt")] = "jpt_kod_je"
 
 pov_json_list <- readRDS("../data/poviaty_json_list.RDS")
 # pov_json <- geojsonio::as.json("../data/powiaty/pow.json")
@@ -21,6 +23,25 @@ pov_json_list <- readRDS("../data/poviaty_json_list.RDS")
 options(shiny.maxRequestSize=30*1024^2)
 
 shinyServer(function(input, output){
+
+  
+  data <- reactive({
+    if(is.null(data)){
+    #   data <- readRDS("../data/data06_18_contig_na_fill.RDS") 
+    # } else {
+    #   data <- upload()
+    # }
+    # req(input$dataFile)
+    # if(input$dataFile){
+      data <- readRDS("../data/data06_18_contig_na_fill.RDS") 
+    } else {
+      data <- upload()
+    }
+    
+    # zmien nazwe zmiennej teryt, # tu wlaczyc wybieranie ktora zmienna jest wspolna
+    names(data)[which(names(data) == "teryt")] = "jpt_kod_je"
+    return(data)
+    })
   
   # -------------------------------------------------- sidebar panel inputs -------------------------------------------------
   
@@ -29,7 +50,7 @@ shinyServer(function(input, output){
   # choose variable
   output$variableOutput <- renderUI({
     
-    choices <- names(data)[5:length(names(data))-1]
+    choices <- names(data())[5:length(names(data()))-1]
     selectInput("variableInput", 
                 label="Variables",
                 choices = choices,
@@ -42,14 +63,14 @@ shinyServer(function(input, output){
   output$areaOutput <- renderUI({
     selectInput("areaInput",
                 label="Area",
-                choices = c("Poland", unique(data$Nazwa)))
+                choices = c("Poland", unique(data()$Nazwa)))
   })
   
   # choose single year 
   output$yearOutput <- renderUI({
     selectInput("inputYear", 
                 label="Year",
-                choices = unique(data$rok),
+                choices = unique(data()$rok),
                 selected = 2018)
   }) 
   
@@ -60,7 +81,7 @@ shinyServer(function(input, output){
                 step = 1,
                 round=TRUE,
                 sep="",
-                min = min(data$rok), max = max(data$rok),
+                min = min(data()$rok), max = max(data()$rok),
                 value = c(2016, 2018))
   }) 
   
@@ -80,7 +101,7 @@ shinyServer(function(input, output){
   output$variableOutput2 <- renderUI({
     selectInput("variableInput2", 
                 label="Variable",
-                choices = names(data)[5:length(names(data))-1])
+                choices = names(data())[5:length(names(data()))-1])
   })
   
   # choose single year <- doesnt depend on input variable, so not in observe
@@ -88,7 +109,7 @@ shinyServer(function(input, output){
     selectInput("inputYear2", 
                 label="Year",
                 selected = 2018,
-                choices = unique(data$rok))
+                choices = unique(data()$rok))
   }) 
   
   # choose title
@@ -119,7 +140,7 @@ shinyServer(function(input, output){
   # created text inputs for breaks, based on ranges of selected variable 
   output$fixedBreaksTexts <- renderUI({
     
-    variable <- data[data$rok == input$inputYear2, input$variableInput2]
+    variable <- data()[data()$rok == input$inputYear2, input$variableInput2]
     min_ <- min(variable)
     max_ <- max(variable)
     intermediate <- paste(rep("_", as.integer(input$ngroupsInput)-1), collapse = "  ")
@@ -139,6 +160,64 @@ shinyServer(function(input, output){
   
   # -------------------------------------------------- tab 1 -------------------------------------------------  
   
+  # uploadCSV <- reactive({
+  #   req(input$dataFile)
+  #   # tryCatch({
+  #         df <- read.csv(input$dataFile$datapath,
+  #                        # header = input$header,
+  #                        # sep = input$sep,
+  #                        # quote = input$quote,
+  #                        encoding = "UTF-8",
+  #                        stringsAsFactors = F)
+  #     # },
+  #     # error = function(e) {
+  #     #   # return a safeError if a parsing error occurs
+  #     #   stop(safeError(e))
+  #     # })
+  # })
+  # uploadRDS <- reactive({
+  #   req(input$dataFile)
+  #   # tryCatch({
+  #   df <- readRDS(input$dataFile$datapath)
+  #   # },
+  #   # error = function(e) {
+  #   #   # return a safeError if a parsing error occurs
+  #   #   stop(safeError(e))
+  #   # })
+  # })
+  
+  # file upload
+  upload <- reactive({
+    
+    req(input$dataFile)
+    
+    if((input$fileType != 0 & !grepl("(.rds)$|(.RDS)$", input$dataFile$datapath))|
+       (input$fileType != 1 & grepl("(.csv)$|(.CSV)$", input$dataFile$datapath))
+    ){
+      
+      showNotification("File format doesn't match the choice!",
+                       type="error",
+                       duration = 7)
+      return(NULL)
+    }
+    
+    if(input$fileType == 0){
+      
+      df <- readRDS(input$dataFile$datapath)
+      
+    } else if(input$fileType == 1){
+      
+      df <- read.csv(input$dataFile$datapath,
+                     # header = input$header,
+                     # sep = input$sep,
+                     # quote = input$quote,
+                     encoding = "UTF-8",
+                     stringsAsFactors = F)
+    }
+    return(df)
+  })
+  
+  
   # get data for table and plot
   filtered <- reactive({
     
@@ -147,15 +226,15 @@ shinyServer(function(input, output){
     
     if(input$periodType == 0){
       # if on single year
-      fitered_data1 <- data[data$rok == input$inputYear &
-                              data$Nazwa %in% if(input$areaInput=="Poland") unique(data$Nazwa) else input$areaInput, 
-                            c(names(data)[1:3],input$variableInput)]
+      fitered_data1 <- data()[data()$rok == input$inputYear &
+                              data()$Nazwa %in% if(input$areaInput=="Poland") unique(data()$Nazwa) else input$areaInput, 
+                            c(names(data())[1:3],input$variableInput)]
       return(fitered_data1)
     } else {
       # if range of years
-      fitered_data1 <- data[data$rok %in% input$inputYears[1]:input$inputYears[2] &
-                              data$Nazwa %in% if(input$areaInput=="Poland") unique(data$Nazwa) else input$areaInput, 
-                            c(names(data)[1:3],input$variableInput)]
+      fitered_data1 <- data()[data()$rok %in% input$inputYears[1]:input$inputYears[2] &
+                              data()$Nazwa %in% if(input$areaInput=="Poland") unique(data()$Nazwa) else input$areaInput, 
+                            c(names(data())[1:3],input$variableInput)]
       return(fitered_data1)
     }
   })
@@ -168,14 +247,14 @@ shinyServer(function(input, output){
     
     if(input$periodType == 0){
       # if on single year
-      fitered_data <- data[data$rok == input$inputYear &
-                             data$Nazwa %in% if(input$areaInput=="Poland") unique(data$Nazwa) else input$areaInput, 
-                           c(names(data)[1:3],input$variableInput)]
+      fitered_data <- data()[data()$rok == input$inputYear &
+                             data()$Nazwa %in% if(input$areaInput=="Poland") unique(data()$Nazwa) else input$areaInput, 
+                           c(names(data())[1:3],input$variableInput)]
     } else {
       # if range of years
-      fitered_data <- data[data$rok %in% input$inputYears[1]:input$inputYears[2] &
-                             data$Nazwa %in% if(input$areaInput=="Poland") unique(data$Nazwa) else input$areaInput, 
-                           c(names(data)[1:3],input$variableInput)]
+      fitered_data <- data()[data()$rok %in% input$inputYears[1]:input$inputYears[2] &
+                             data()$Nazwa %in% if(input$areaInput=="Poland") unique(data()$Nazwa) else input$areaInput, 
+                           c(names(data())[1:3],input$variableInput)]
     } 
     
     # data frame for missing values, columns-years, rows-variables
@@ -219,7 +298,16 @@ shinyServer(function(input, output){
     })
   })
   
+  output$contents  <- DT::renderDataTable({
+    input$showData
+    isolate({
+      # uploadCSV()
+      upload()
+    })
+  })
+  
   # -------------------------------------------------- tab 2 -------------------------------------------------
+  
   
   # function to extract numbers of breaks from breaksInput | this needs to be in reactive, because uses input that needs to be updates and 
   # needs to return a value
@@ -280,8 +368,8 @@ shinyServer(function(input, output){
     # think of replacing notify by  validate() to get information <- write funciton for these
     
     # do not show anyting at the beggining, otherwise error
-    dane <- data[data$rok == input$inputYear2, 
-                 c(names(data)[2:3], "jpt_kod_je", input$variableInput2)] 
+    dane <- data()[data()$rok == input$inputYear2, 
+                 c(names(data())[2:3], "jpt_kod_je", input$variableInput2)] 
     
     # if one recalculates the map in the same session, change number of groups
     if(input$bucketingTypeInput == 1){
@@ -323,102 +411,6 @@ shinyServer(function(input, output){
       saveWidget(map(), file)
     }
   )
-  
-  
-  # -------------------------------------------------- tab 3 -------------------------------------------------  
-  
-  
-  
-  # uploadCSV <- reactive({
-  #   
-  #   req(input$dataFile)
-  #   # tryCatch(
-  #   #   {
-  #         df <- read.csv(input$dataFile$datapath,
-  #                        # header = input$header,
-  #                        # sep = input$sep,
-  #                        # quote = input$quote,
-  #                        encoding = "UTF-8",
-  #                        stringsAsFactors = F)
-  #     # },
-  #     # 
-  #     # error = function(e) {
-  #     #   # return a safeError if a parsing error occurs
-  #     #   stop(safeError(e))
-  #     # }
-  #   # )
-  #   
-  # })
-  # 
-  # uploadRDS <- reactive({
-  #   
-  #   req(input$dataFile)
-  #   # tryCatch(
-  #   df <- readRDS(input$dataFile$datapath)
-  #   
-  #   # }
-  #   # },
-  #   # 
-  #   # error = function(e) {
-  #   #   # return a safeError if a parsing error occurs
-  #   #   stop(safeError(e))
-  #   # }
-  #   # )
-  # })
-  
-  upload <- reactive({
-    
-    req(input$dataFile)
-    
-    if((input$fileType != 0 & !grepl("(.rds)$|(.RDS)$", input$dataFile$datapath))|
-       (input$fileType != 1 & grepl("(.csv)$|(.CSV)$", input$dataFile$datapath))
-    ){
-      
-      showNotification("File format doesn't match the choice!",
-                       type="error",
-                       duration = 7)
-      return(NULL)
-    }
-    
-    if(input$fileType == 0){
-      
-      df <- readRDS(input$dataFile$datapath)
-      
-    } else if(input$fileType == 1){
-      
-      df <- read.csv(input$dataFile$datapath,
-                     # header = input$header,
-                     # sep = input$sep,
-                     # quote = input$quote,
-                     encoding = "UTF-8",
-                     stringsAsFactors = F)
-    }
-    return(df)
-  })
-  
-  # output$RDScontents  <- DT::renderDataTable({
-  #   input$showRDSdata
-  #   isolate({
-  #     # uploadRDS()
-  #     upload()
-  #     })
-  #   })
-  # 
-  # output$CSVcontents  <- DT::renderDataTable({
-  #   input$showCSVdata
-  #   isolate({
-  #     # uploadCSV()
-  #     upload()
-  #   })
-  
-  output$contents  <- DT::renderDataTable({
-    input$showData
-    isolate({
-      # uploadCSV()
-      upload()
-    })
-  })
-  
 })
 
 

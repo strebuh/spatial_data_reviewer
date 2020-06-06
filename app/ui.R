@@ -4,6 +4,9 @@ library(shinyWidgets)
 library(highcharter)
 library(shinycssloaders)
 
+data <- readRDS("../data/data06_18_contig_na_fill.rds") 
+
+
 shinyUI(fluidPage(
   
   tags$head(
@@ -24,9 +27,20 @@ shinyUI(fluidPage(
                       # tags$head(
                       #   tags$style(HTML(".shiny-output-error-validation{color: red;}"))),
                       
-                      pageWithSidebar(
-                        headerPanel(h3('Apply filters')),
+                      # pageWithSidebar(
+                        # headerPanel(h3('Apply filters')),
                         sidebarPanel(width = 3,
+                                     
+                                     radioButtons("fileType", label = "Choose type of file to upload",
+                                                  choices = list("RDS" = 0, "CSV" = 1), 
+                                                  selected = 0,
+                                                  inline= T
+                                                  ),
+                                     
+                                     fileInput("dataFile", "Choose CSV/RDS File",
+                                               multiple = FALSE,
+                                               accept = c(".csv", ".rds", ".RDS")
+                                               ),
                                      
                                      # choice of variable, based on variables in data
                                      uiOutput("variableOutput"),
@@ -45,29 +59,25 @@ shinyUI(fluidPage(
                                      conditionalPanel(condition="input.periodType == 1", 
                                                       uiOutput("yearsOutput")),
                                      hr(),
-                                     # apply filters to prepare data statistics
-                                     actionButton("filterData",label = "Show Data"),
-                                     actionButton("filterMissings",label = "Show missings")
+                                     
+                                     fluidRow(column(4, align="center",
+                                                     actionButton("allData",label = "Data")),
+                                              column(4, align="center",
+                                                     actionButton("filterData",label = "Filtered")),
+                                              column(4, align="left",
+                                                     actionButton("filterMissings",label = "Missings"))
+                                     ),
                         ),
                         
                         mainPanel(width = 9,
                           br(),
                           tabsetPanel(type = "tabs",
+                                      tabPanel("Uploaded", DT::dataTableOutput("contents")),
                                       tabPanel("Variables", DT::dataTableOutput("dataOutput")),
                                       tabPanel("Missings", DT::dataTableOutput("missingsOutput"))
                           )
-                          
-                          # column(9,
-                          #        hr(),
-                          #        DT::dataTableOutput("dataOutput"),
-                          # 
-                          #        # plotlyOutput("plot1", width = 800, height=700),
-                          #        # hr(),
-                          #        # p("Some text at the bottom - maybe will be deleted.",
-                          #        #   style = "font-size:15px")
-                          #        )
                         )
-                      )
+                      # )
                       ),
              
              # -------------------------------------------------- tab 2 -------------------------------------------------  
@@ -77,8 +87,8 @@ shinyUI(fluidPage(
                       # tags$head(
                       #   tags$style(HTML(".shiny-output-error-validation{color: red;}"))),
                       
-                      pageWithSidebar(
-                        headerPanel(h3('Apply filters')),
+                      # pageWithSidebar(
+                        # headerPanel(h3('Apply filters')),
                         sidebarPanel(width = 3,
                                      
                                      # choice of variable, based on variables in data
@@ -92,7 +102,6 @@ shinyUI(fluidPage(
                                      
                                      checkboxInput("reverseColor", label = "Reverse colors", value = FALSE, width = NULL),
                                      
-                                     # uiOutput("groupingTypeOutput"),
                                      selectInput("groupingTypeInput",
                                                   label = "Type of grouping",
                                                   choices  = c("fixed", "sd", "equal", "pretty", "quantile", 
@@ -133,64 +142,23 @@ shinyUI(fluidPage(
                         
                         mainPanel(
                           column(12,
-                                 # addSpinner(highchartOutput("mapOutput"), spin = "rotating-plane", color = "#984EA3"),
                                  withSpinner(highchartOutput("mapOutput", height = "600px", width = "100%")),
                                  br(),
                                  # downloadButton("downloadMap", "Download map")
                           )
                         )
-                      )
+                      # )
                       ),
              
-             # -------------------------------------------------- tab 3, 4 -------------------------------------------------  
+             # -------------------------------------------------- tab 3 -------------------------------------------------  
              
-             tabPanel("Upload",
-                      sidebarPanel(
-                        radioButtons("fileType", label = "Choose type of file to upload",
-                                     choices = list("RDS" = 0, "CSV" = 1), 
-                                     selected = 0,
-                                     inline= T),
-                        # conditionalPanel(condition = "input.fileType == 0",
-                        #                  actionButton("showRDSdata", label = "Show data")
-                        #                  ),
-                        # conditionalPanel(condition = "input.fileType == 1",
-                        #                  actionButton("showCSVdata", label = "Show data")
-                        #                  ),
-                        # # Input: Select a file ----
-                        # conditionalPanel(condition = "input.fileType == 0",
-                        #                  fileInput("dataFile", "Choose RDS File",
-                        #                            multiple = FALSE,
-                        #                            accept = c(".rds",
-                        #                                       ".RDS")
-                        #                            )
-                        #                  ),
-                        # conditionalPanel(condition = "input.fileType == 1",
-                        #                  fileInput("dataFile", "Choose CSV File",
-                        #                            multiple = FALSE,
-                        #                            accept = c(".csv")
-                        #                            )
-                        #                  ),
-                        actionButton("showData", label = "Show data"),
-                        fileInput("dataFile", "Choose CSV/RDS File",
-                                  multiple = FALSE,
-                                  accept = c(".csv", ".rds", ".RDS")
-                                  )
-                        # )
-                        ),
-                      
-                      mainPanel(
-                        # conditionalPanel(condition = "input.fileType == 0",
-                        #                  DT::dataTableOutput("RDScontents")
-                        #                  ),
-                        # conditionalPanel(condition = "input.fileType == 1",
-                        #                  DT::dataTableOutput("CSVcontents")
-                        #                  )
-                        DT::dataTableOutput("contents")
-                        )
-                      ),
-                      
-                      # , p("This is a place for some explonation", target="_blank"), ".",style = "font-size:25px"),
+             tabPanel("Analyses"), 
              
-             tabPanel("Tab 4",
-                      p(a("WNE", href="https://www.wne.uw.edu.pl/en/", target="_blank"),style = "font-size:25px")
-                      ))))
+             # -------------------------------------------------- tab 4 -------------------------------------------------  
+             
+             tabPanel("Model") 
+             
+             
+             )
+  )
+  )
