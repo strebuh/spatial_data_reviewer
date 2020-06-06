@@ -22,7 +22,7 @@ get_interactive_map <- function(
   # --------------------------------------------------------------------
   
   # which variables is being mapped
-  message(paste0("Mapped varisle is: ", names(plot_data)[mapped_variable]))
+  message(paste0("Mapped variable is: ", names(plot_data)[mapped_variable]))
   
   # prepare hover
     org_name <- names(plot_data)[mapped_variable]  
@@ -44,13 +44,13 @@ get_interactive_map <- function(
     if(bucketing_type == "kmeans" | bucketing_type == "bclust") set.seed(bucketing_seed)
     
     # classes computed withoug given number
-    klasy <- classIntervals(variable, style = bucketing_type)
-    groups_quantity <- length(klasy$brks) - 1
+    classes <- classIntervals(variable, style = bucketing_type)
+    groups_quantity <- length(classes$brks) - 1
     
     } else if(bucketing_type == "fixed"){
       
       # for fix compute classes using custom breaks
-      klasy <- classIntervals(variable, style=bucketing_type, fixedBreaks = breaks)
+      classes <- classIntervals(variable, style=bucketing_type, fixedBreaks = breaks)
       groups_quantity <- length(breaks) - 1
     
     } else {
@@ -59,12 +59,12 @@ get_interactive_map <- function(
       if(bucketing_type == "kmeans" | bucketing_type == "bclust") set.seed(bucketing_seed)
       
       # compute classes
-      klasy <- classIntervals(variable, groups_quantity, style = bucketing_type)
+      classes <- classIntervals(variable, groups_quantity, style = bucketing_type)
       
       # if sd, pretty but algorithm chose another number of classes adjust number of classes
-      if(bucketing_type == "sd" | bucketing_type == "pretty" & length(klasy$brks) != groups_quantity ){
+      if(bucketing_type == "sd" | bucketing_type == "pretty" & length(classes$brks) != groups_quantity ){
         
-        groups_quantity <- length(klasy$brks) - 1
+        groups_quantity <- length(classes$brks) - 1
         warning(paste(bucketing_type, "has changed number of groups to", groups_quantity))
         }
       }
@@ -82,7 +82,7 @@ get_interactive_map <- function(
   }
     
   # table of colors
-  colors.table <- findColours(klasy, colors)
+  colors.table <- findColours(classes, colors)
   
   # --------------------------------------------------------------------
   
