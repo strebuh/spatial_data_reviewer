@@ -4,8 +4,10 @@ library(shinyWidgets)
 library(highcharter)
 library(shinycssloaders)
 
-data <- readRDS("../data/data06_18_contig_na_fill.rds") 
-
+myDownloadButton <- function(outputId, label = "Download"){
+  tags$a(id = outputId, class = "btn btn-default shiny-download-link", href = "", 
+         target = "_blank", download = NA, NULL, label)
+}
 
 shinyUI(fluidPage(
   
@@ -135,8 +137,8 @@ shinyUI(fluidPage(
                                                                        )
                                                       ),
                                      hr(),
-                                     actionButton("filterAction2",label = "Prepare map"),
-                                     downloadButton("downloadMap", "Download map")
+                                     actionButton("filterAction2",label = "Prepare"),
+                                     myDownloadButton("downloadMap", "Download")
                                      
                         ),
                         
@@ -144,7 +146,6 @@ shinyUI(fluidPage(
                           column(12,
                                  withSpinner(highchartOutput("mapOutput", height = "600px", width = "100%")),
                                  br(),
-                                 # downloadButton("downloadMap", "Download map")
                           )
                         )
                       # )
