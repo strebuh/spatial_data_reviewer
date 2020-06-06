@@ -7,9 +7,6 @@ library(bsplus)
 library(backports)
 library(shinycssloaders)
 
-# data_ <- readRDS("./data/data06_18_NA.RDS")
-# class(data_)
-# is.data.frame(data_)
 
 source("../scripts/get_interactive_map.R")
 
