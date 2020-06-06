@@ -140,19 +140,41 @@ shinyUI(fluidPage(
                           )
                         )
                       )
-             ),
+                      ),
              
              # -------------------------------------------------- tab 3, 4 -------------------------------------------------  
              
-             tabPanel("Tab 3",
-                      p("This is a place for some explonation", target="_blank"), ".",style = "font-size:25px"),
+             tabPanel("Upload",
+                      sidebarPanel(
+                        radioButtons("fileType", label = "Choose type of file to upload",
+                                     choices = list("RDS" = 0, "CSV" = 1), 
+                                     selected = 0,
+                                     inline= T),
+                        # actionButton("showData", label = "Show data"),
+                        
+                        # Input: Select a file ----
+                        conditionalPanel(condition = "input.fileType == 1",
+                                         fileInput("dataFile", "Choose CSV File",
+                                                   multiple = FALSE,
+                                                   accept = c(".csv")
+                                                   )
+                                         ),
+                        conditionalPanel(condition = "input.fileType == 0",
+                                         fileInput("dataFile", "Choose RDS File",
+                                                   multiple = FALSE,
+                                                   accept = c(".rds",
+                                                              ".RDS")
+
+                                                   )
+                                         )
+                        ),
+                      
+                      mainPanel(DT::dataTableOutput("contents")
+                                )
+                      ),
+                      
+                      # , p("This is a place for some explonation", target="_blank"), ".",style = "font-size:25px"),
              
              tabPanel("Tab 4",
                       p(a("WNE", href="https://www.wne.uw.edu.pl/en/", target="_blank"),style = "font-size:25px")
-                      )
-             
-  )  
-    
-    
-)
-)
+                      ))))

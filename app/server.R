@@ -133,24 +133,6 @@ shinyServer(function(input, output){
       })
     
 
-    # ---------------------------------------------------- functions -----------------------------------------------------------------------
-    # function to extract numbers of breaks from breaksInput | this needs to be in reactive, because uses input that needs to be updates and 
-    # needs to return a value
-    fixedBreaks <- reactive({
-      # separate text inputs
-      breaks <- as.numeric(unlist(stringr::str_split(input$breaksInput, pattern = "\\s+")))
-    })
-    
-    # # dependent on input, and need to reevaluate and return so in reactive
-    # not_fixed_automatic <- reactive({
-    #   if(input$bucketingTypeInput == 0){
-    #     showNotification("Fixed and  type cannot be automatic!",
-    #                      type="error",
-    #                      duration = 7)
-    #     return(NULL)
-    #   }
-    # })
-
   # -------------------------------------------------- outoputs -------------------------------------------------
   
   # -------------------------------------------------- tab 1 -------------------------------------------------  
@@ -237,6 +219,23 @@ shinyServer(function(input, output){
 
     # -------------------------------------------------- tab 2 -------------------------------------------------
     
+    # function to extract numbers of breaks from breaksInput | this needs to be in reactive, because uses input that needs to be updates and 
+    # needs to return a value
+    fixedBreaks <- reactive({
+      # separate text inputs
+      breaks <- as.numeric(unlist(stringr::str_split(input$breaksInput, pattern = "\\s+")))
+    })
+    
+    # # dependent on input, and need to reevaluate and return so in reactive
+    # not_fixed_automatic <- reactive({
+    #   if(input$bucketingTypeInput == 0){
+    #     showNotification("Fixed and  type cannot be automatic!",
+    #                      type="error",
+    #                      duration = 7)
+    #     return(NULL)
+    #   }
+    # })
+    
     # get data for table and plot
     map <- reactive({
       
@@ -322,8 +321,56 @@ shinyServer(function(input, output){
         saveWidget(map(), file)
       }
     )
-  })
 
+
+      # -------------------------------------------------- tab 3 -------------------------------------------------  
+
+
+
+    uploadCSV <- reactive({
+      
+      req(input$dataFile)
+      # tryCatch(
+      #   {
+            df <- read.csv(input$dataFile$datapath,
+                           # header = input$header,
+                           # sep = input$sep,
+                           # quote = input$quote,
+                           encoding = "UTF-8",
+                           stringsAsFactors = F)
+        # },
+        # 
+        # error = function(e) {
+        #   # return a safeError if a parsing error occurs
+        #   stop(safeError(e))
+        # }
+      # )
+      
+    })
+    
+    uploadRDS <- reactive({
+      
+      req(input$dataFile)
+      # tryCatch(
+      df <- readRDS(input$dataFile$datapath)
+      
+      # }
+      # },
+      # 
+      # error = function(e) {
+      #   # return a safeError if a parsing error occurs
+      #   stop(safeError(e))
+      # }
+      # )
+    })
+
+    output$contents  <- DT::renderDataTable({
+      if(input$fileType == 1) uploadCSV()
+      if(input$fileType == 0) uploadRDS()
+      })
+    
+})
+    
     
     # downloading
     # https://shiny.rstudio.com/articles/download.html
