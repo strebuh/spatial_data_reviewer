@@ -7,6 +7,10 @@ library(bsplus)
 library(backports)
 library(shinycssloaders)
 
+# data_ <- readRDS("./data/data06_18_NA.RDS")
+# class(data_)
+# is.data.frame(data_)
+
 source("../scripts/get_interactive_map.R")
 
 # input$dataFile
@@ -26,13 +30,8 @@ shinyServer(function(input, output){
 
   
   data <- reactive({
+    
     if(is.null(data)){
-    #   data <- readRDS("../data/data06_18_contig_na_fill.RDS") 
-    # } else {
-    #   data <- upload()
-    # }
-    # req(input$dataFile)
-    # if(input$dataFile){
       data <- readRDS("../data/data06_18_contig_na_fill.RDS") 
     } else {
       data <- upload()
@@ -40,6 +39,21 @@ shinyServer(function(input, output){
     
     # zmien nazwe zmiennej teryt, # tu wlaczyc wybieranie ktora zmienna jest wspolna
     names(data)[which(names(data) == "teryt")] = "jpt_kod_je"
+    
+    print(!is.data.frame(data))
+    
+    if(is.data.table(data) | tibble::is_tibble(data)){
+      tryCatch({
+        data <- as.data.frame(data)
+      }, error = function(e) {
+        showNotification("A file must readable as data.frame or data.table!",
+                         type="error",
+                         duration = 7)
+        return(NULL)
+      })
+    }
+    print(class(data))
+    
     return(data)
     })
   
