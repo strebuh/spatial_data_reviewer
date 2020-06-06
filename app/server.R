@@ -15,14 +15,8 @@ source("../scripts/get_interactive_map.R")
 
 # input$dataFile
 data <- NULL
-# data <- readRDS("../data/data06_18_contig_na_fill.RDS") 
-# data <- readRDS("../data/data06_18_contig_na_fill.RDS") 
-# data <- readRDS("data/data06_18_contig_na_fill.RDS")
-
-# names(data)[which(names(data) == "teryt")] = "jpt_kod_je"
 
 pov_json_list <- readRDS("../data/poviaty_json_list.RDS")
-# pov_json <- geojsonio::as.json("../data/powiaty/pow.json")
 
 options(shiny.maxRequestSize=30*1024^2)
 
