@@ -213,13 +213,13 @@ shinyUI(fluidPage(
                                  condition = "input.staticMap == false",
                                  # textOutput("staticMapOff"),
                                  br(),
-                                 withSpinner(highchartOutput("interactiveMapOutput", height = "600px", width = "100%"))
+                                 withSpinner(highchartOutput("interactiveMapOutput", height = "730px", width = "100%"))
                                  ),
                                  conditionalPanel(
                                  condition = "input.staticMap == true",
                                  # textOutput("staticMapOn"),
                                  br(),
-                                 withSpinner(plotOutput("staticMapOutput", height = "500px", width = "70%"))
+                                 withSpinner(plotOutput("staticMapOutput", height = "630px", width = "70%"))
                                  )
                                )
                         )

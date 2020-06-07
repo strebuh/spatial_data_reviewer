@@ -292,7 +292,7 @@ shinyServer(function(input, output){
     for(i in seq(min(fitered_data$rok), max(fitered_data$rok),1)){
       
       # number of missing values in given year and variable
-      col  = sapply(fitered_data()[fitered_data$rok==i,], function(x) sum(is.na(x)))
+      col  = sapply(fitered_data[fitered_data$rok==i,], function(x) sum(is.na(x)))
       # input to right cell
       missings[,j] = col
       j=j+1
