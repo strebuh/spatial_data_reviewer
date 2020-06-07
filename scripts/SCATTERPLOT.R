@@ -1,7 +1,7 @@
 
 scatterplot = function(data,x,y){
   
-  plot=ggplot(data, aes(x = data[,match(x,colnames(data))], y = data[,match(y,colnames(data))])) +
+  plot=ggplot(data, aes_string(x = x, y = y)) + # x = data[,match(x,colnames(data))],  y = data[,match(y,colnames(data))]
     geom_point() +
     theme(legend.position="none") + 
     ggtitle(paste(x,' vs ',y,sep='')) + 
@@ -10,5 +10,3 @@ scatterplot = function(data,x,y){
   
   return(plot)
 }
-
-scatterplot(data,'kob_w_bezrob','bezrob_proc')

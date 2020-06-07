@@ -1,4 +1,4 @@
-missings <- function(data, i, max_name_length=24){
+missings <- function(data, i, max_name_length=24, ...){
   
   title = colnames(data)[i]
   
