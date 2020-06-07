@@ -644,6 +644,11 @@ shinyServer(function(input, output){
 
   # -------------------------------------------------- tab 4 -------------------------------------------------
 
+  get_weigth_matrix <- reactive({
+    cont.nb<-poly2nb(as(sp_map(), "SpatialPolygons"))
+    cont.listw<-nb2listw(cont.nb, style="W")
+  })
+  
     # prepares models formula
     fitter <- reactive({
       
@@ -686,6 +691,9 @@ shinyServer(function(input, output){
         fit <- lm(model_formula, data=data_subset)
       }
 
+      # get spatial weights matrix
+      cont.listw <- get_weigth_matrix()
+      
       #runs Manski model
       if(input$ChosenModel=='manski'){
         fit <- sacsarlm(model_formula,
@@ -738,6 +746,8 @@ shinyServer(function(input, output){
                      listw=cont.listw)
       }
 
+      print(class(fit))
+      
       return(fit)
 
     })
@@ -754,14 +764,21 @@ shinyServer(function(input, output){
       return(rec)
     })
 
-    #returns chosen model's summary
-    output$evaluation <- renderPrint({
-      summary(fitter())
+    # #returns chosen model's summary
+    # output$evaluation <- renderPrint({
+    #   input$fitModel
+    #   isolate(summary(fitter()))
+    # })
 
-    })
-
-    output$recommendation = renderPrint({
-      paste('Recommended variables are:',paste(recom(),collapse=", "))
+    output$recommendation_evaluation = renderPrint({
+      input$fitModel
+      isolate({
+        # paste(
+        # paste('Recommended variables are:',paste(recom(),collapse=", ")),
+        summary(fitter())
+        # , collapse="\n")
+      })
+      
     })
     
   

@@ -231,9 +231,9 @@ shinyUI(fluidPage(
                       
                       fluidPage(theme = shinytheme("flatly")),
                       
-                      pageWithSidebar(
+                      # pageWithSidebar(
                         
-                        headerPanel(h3('Apply filters')),
+                        # headerPanel(h3('Apply filters')),
                         
                         sidebarPanel(
                           uiOutput("year"),
@@ -250,7 +250,7 @@ shinyUI(fluidPage(
                         mainPanel(
                           plotOutput("plots")
                         )
-                      )
+                      # )
              ), # tab sie konczy
              
              # , p("This is a place for some explonation", target="_blank"), ".",style = "font-size:25px"),
@@ -262,9 +262,9 @@ shinyUI(fluidPage(
                       
                       fluidPage(theme = shinytheme("flatly")),
                       
-                      pageWithSidebar(
+                      # pageWithSidebar(
                         
-                        headerPanel(h3('Apply filters')),
+                        # headerPanel(h3('Apply filters')),
                         
                         sidebarPanel(width = 3,
                                      selectInput("ChosenModel", 
@@ -299,15 +299,18 @@ shinyUI(fluidPage(
                                      #                  ),
                                      #conditionalPanel(condition="input.Stepwise == 1", 
                                      
-                                     uiOutput("IndependentVariables")
+                                     uiOutput("IndependentVariables"),
+                                     
+                                     actionButton("fitModel", label = "Fit Model")
+                                     
                                      # )
                         ),
                         
                         mainPanel(
-                          verbatimTextOutput("recommendation"),
-                          verbatimTextOutput("evaluation")
+                          withSpinner(verbatimTextOutput("recommendation_evaluation"))#,
+                          # withSpinner(verbatimTextOutput("evaluation"))
                         )
-                      )
+                      # )
                       
              ) # tab sie konczy
   )))
