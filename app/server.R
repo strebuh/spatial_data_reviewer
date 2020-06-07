@@ -267,7 +267,7 @@ shinyServer(function(input, output){
   })
   
   # function for displaying missings
-  missings <- reactive({
+  missings_df <- reactive({
     
     # filter data, filtered is reactive, thus will not be null, always gets generated
     req(input$variableInput)
@@ -329,7 +329,7 @@ shinyServer(function(input, output){
   output$missingsOutput <- DT::renderDataTable({
     input$filterMissings
     isolate({
-      missings()
+      missings_df()
     })
   })
   
@@ -590,20 +590,20 @@ shinyServer(function(input, output){
     #adjusted histogram
     source("../scripts/HISTOGRAM.R")
     his=nice_histogram(as.data.frame(data_subset), 
-                       i = match(var1,colnames(data_subset)),
+                       match(var1,colnames(data_subset)),
                        bars,
                        x_lower,
                        x_upper)
     
     #waffle plot with missing values
     source("../scripts/MISSINGS.R")
-    mis=missings(data = as.data.frame(data_subset),
-                 i = match(var1, colnames(data_subset))
+    mis=missings(as.data.frame(data_subset),
+                 match(var1, colnames(data_subset))
                  )
     
     #scatterplot
     source("../scripts/SCATTERPLOT.R")
-    sca=scatterplot(data_subset, var1, var2)
+    sca=scatterplot(as.data.frame(data_subset), var1, var2)
     
     #calculates Morans's I and prepares a pie chart
     result01 <- moran.test(data_subset[,match(var1,colnames(data_subset))],
@@ -611,20 +611,20 @@ shinyServer(function(input, output){
     
     if(result01$estimate[1]>0){
       label = round(result01$estimate[1],4)
-      moran_stat=data.frame(groups=c('a','b'),
+      moran_stat_df <- data.frame(groups=c('a','b'),
                             values=c(result01$estimate[1],1-abs(result01$estimate[1])))
       dir=1
       col="#00b159"
     }
     if(result01$estimate[1]<0){
       label = round(result01$estimate[1],4)
-      moran_stat=data.frame(groups=c('a','b'),
+      moran_stat_df <- data.frame(groups=c('a','b'),
                             values=c(-result01$estimate[1],1+abs(result01$estimate[1])))
       dir=-1
       col="#d11141"
     }
     
-    mor=ggplot(moran_stat, aes(x="", y=values, fill=groups)) +
+    mor <- ggplot(moran_stat_df, aes(x="", y=values, fill=groups)) +
       geom_bar(stat="identity", width=1) +
       coord_polar("y", start=0, direction=dir) +
       theme_void() +
@@ -636,7 +636,7 @@ shinyServer(function(input, output){
     
     #finds top 10 correlated variables (considering its absolute values)
     source("../scripts/TOP_CORRELATIONS.R")
-    vars = find_best_predictors(data_subset,var1)
+    vars = find_best_predictors(data_subset, var1)
     
     #combined plot
     combined_plot <- grid.arrange(grobs=list(his, mor, sca, mis, tableGrob(vars, rows=NULL, theme=ttheme_minimal(base_size = 10))),
