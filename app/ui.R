@@ -81,7 +81,7 @@ shinyUI(fluidPage(
                                                )
                                       )
                           )
-                        ),
+                        ), # tab sie konczy
              
              # -------------------------------------------------- tab 2 -------------------------------------------------  
              
@@ -220,17 +220,95 @@ shinyUI(fluidPage(
                                  # textOutput("staticMapOn"),
                                  br(),
                                  withSpinner(plotOutput("staticMapOutput", height = "500px", width = "70%"))
-                                 )))),
+                                 )
+                               )
+                        )
+                      ), # tab sie konczy
              
              # -------------------------------------------------- tab 3 -------------------------------------------------  
              
-             tabPanel("Analyses"),
+             tabPanel("Analyses",
+                      
+                      fluidPage(theme = shinytheme("flatly")),
+                      
+                      pageWithSidebar(
+                        
+                        headerPanel(h3('Apply filters')),
+                        
+                        sidebarPanel(
+                          uiOutput("year"),
+
+                          uiOutput("var"),
+                          
+                          uiOutput("var2"),
+                          
+                          sliderInput("bars", "No of bars in histogram:", min = 2, max = 100, value = 20, step = 1),
+                          textInput("x_lower", "X-axis limit in histogram (lower):", ''),
+                          textInput("x_upper", "X-asix limit in histogram (upper):", '')
+                        ),
+                        
+                        mainPanel(
+                          plotOutput("plots")
+                        )
+                      )
+             ), # tab sie konczy
              
-             # -------------------------------------------------- tab 4 -------------------------------------------------
+             # , p("This is a place for some explonation", target="_blank"), ".",style = "font-size:25px"),
              
-             tabPanel("Model")
              
-             )
-  )
-  )
+             # -------------------------------------------------- tab 4 -------------------------------------------------  
+             
+             tabPanel("Model",
+                      
+                      fluidPage(theme = shinytheme("flatly")),
+                      
+                      pageWithSidebar(
+                        
+                        headerPanel(h3('Apply filters')),
+                        
+                        sidebarPanel(width = 3,
+                                     selectInput("ChosenModel", 
+                                                 label = "Model",
+                                                 choices = c(
+                                                   'ols','manski','sac','sdem','sem','sdm','sar','slx'
+                                                 ),
+                                                 selected = 'ols'),
+                                     
+                                     uiOutput("ChosenYear"),
+                                     
+                                     selectInput("Distance", 
+                                                 label = "Formula type",
+                                                 choices = c('default: y~x',
+                                                             'multinomial: y~x+x^2+x^3+x^4',
+                                                             'power: log(y)~log(x)',
+                                                             'exponential: log(y)~x'),
+                                                 selected = 'default: y~x'),
+                                     
+                                     uiOutput("DependentVariable"),
+                                     
+                                     #radioButtons("Stepwise", label = 'Choosing variables',
+                                     #choices = list("automatic" = 0, "manual" = 1), 
+                                     #selected = 1),
+                                     
+                                     #conditionalPanel(condition="input.Stepwise == 0",
+                                     #                   selectInput("IndependentVariables", 
+                                     #                               label = "Independent variables",
+                                     #                              choices = colnames(data),
+                                     #                              selected = 'kob_w_bezrob',
+                                     #                               multiple = TRUE)
+                                     #                  ),
+                                     #conditionalPanel(condition="input.Stepwise == 1", 
+                                     
+                                     uiOutput("IndependentVariables")
+                                     # )
+                        ),
+                        
+                        mainPanel(
+                          verbatimTextOutput("recommendation"),
+                          verbatimTextOutput("evaluation")
+                        )
+                      )
+                      
+             ) # tab sie konczy
+  )))
 

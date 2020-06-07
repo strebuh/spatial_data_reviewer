@@ -169,6 +169,44 @@ shinyServer(function(input, output){
       )
   })
   
+  # -------------------------------------------------- tab 3 -------------------------------------------------  
+  
+  output$year <- renderUI({
+    selectInput("year", 
+                label = "Choose a year",
+                choices = c(min(data()$rok):max(data()$rok)),
+                selected = 2018)
+    })
+  
+  output$var <- renderUI({selectInput("var", 
+                                      label = "Choose a variable",
+                                      choices = colnames(data()),
+                                      selected = 'kob_w_bezrob')})
+  output$var2 <- renderUI({selectInput("var2",
+                                       label = "Choose another variable for scatterplot",
+                                       choices = colnames(data()),
+                                       selected = 'bezrob_proc')})
+
+  
+  
+  
+  # -------------------------------------------------- tab 4 -------------------------------------------------  
+  
+  output$ChosenYear <- renderUI({selectInput("ChosenYear", 
+                                             label = "Year",
+                                             choices = unique(data()$rok),
+                                             selected = 2018)})
+  output$DependentVariable <- renderUI({selectInput("DependentVariable", 
+                                                    label = "Dependent variable",
+                                                    choices = colnames(data()),
+                                                    selected = 'kob_w_bezrob')})
+  output$IndependentVariables <- renderUI({selectInput("IndependentVariables", 
+                                                       label = "Independent variables",
+                                                       choices = colnames(data()),
+                                                       selected = "bezrob_proc",
+                                                       multiple = TRUE)})
+
+  
   
   # -------------------------------------------------- functions and outoputs -------------------------------------------------
   
