@@ -8,10 +8,11 @@ library(backports)
 library(shinycssloaders)
 library(rgdal)
 
-
+source("../scripts/PACKAGES.R")
 source("../scripts/get_static_map.R")
 source("../scripts/get_interactive_map.R")
 source("../scripts/get_ggplot_map.R")
+
 
 # input$dataFile
 data <- NULL
@@ -174,7 +175,7 @@ shinyServer(function(input, output){
   output$year <- renderUI({
     selectInput("year", 
                 label = "Choose a year",
-                choices = c(min(data()$rok):max(data()$rok)),
+                choices = unique(data()$rok), # c(min(data()$rok):max(data()$rok))
                 selected = 2018)
     })
   
@@ -182,6 +183,7 @@ shinyServer(function(input, output){
                                       label = "Choose a variable",
                                       choices = colnames(data()),
                                       selected = 'kob_w_bezrob')})
+  
   output$var2 <- renderUI({selectInput("var2",
                                        label = "Choose another variable for scatterplot",
                                        choices = colnames(data()),
@@ -290,7 +292,7 @@ shinyServer(function(input, output){
     for(i in seq(min(fitered_data$rok), max(fitered_data$rok),1)){
       
       # number of missing values in given year and variable
-      col  = sapply(fitered_data[fitered_data$rok==i,], function(x) sum(is.na(x)))
+      col  = sapply(fitered_data()[fitered_data$rok==i,], function(x) sum(is.na(x)))
       # input to right cell
       missings[,j] = col
       j=j+1
@@ -398,7 +400,7 @@ shinyServer(function(input, output){
 
     # do not show anyting at the beggining, otherwise error
     dane <- data()[data()$rok == input$inputYear2,
-                 c(names(data)[2:3], "jpt_kod_je", input$variableInput2)]
+                 c(names(data())[2:3], "jpt_kod_je", input$variableInput2)]
 
     # if one recalculates the map in the same session, change number of groups
     if(input$bucketingTypeInput == 1){
@@ -555,8 +557,213 @@ shinyServer(function(input, output){
   
   # -------------------------------------------------- tab 3 -------------------------------------------------
   
-  # -------------------------------------------------- tab 4 -------------------------------------------------
   
+  output$plots <- renderPlot({
+
+    req(input$year, input$var, input$var2, input$bars)
+    
+    #all the input
+    year = input$year
+    var1 = input$var
+    var2 = input$var2
+    bars = input$bars
+
+    print(class(var1))
+    print(class(var2))
+    
+    #using one year only
+    data_subset <- data()[data()$rok==input$year,]
+
+    #adjusting the histogram
+    if(input$x_lower=='' | input$x_upper==''){
+      x_lower = summary(data_subset[,match(var1, colnames(data_subset))])[1]
+      x_upper = summary(data_subset[,match(var1, colnames(data_subset))])[6]
+
+      x_lower = as.numeric(x_lower)
+      x_upper = as.numeric(x_upper)
+    }
+    else{
+      x_lower = as.numeric(input$x_lower)
+      x_upper = as.numeric(input$x_upper)
+    }
+
+    #adjusted histogram
+    source("../scripts/HISTOGRAM.R")
+    his=nice_histogram(as.data.frame(data_subset), match(var1,colnames(data_subset)),
+                       bars,x_lower,x_upper)
+
+    #waffle plot with missing values
+    source("../scripts/MISSINGS.R")
+    mis=missings(as.data.frame(data_subset),match(var1, colnames(data_subset)))
+
+    #scatterplot
+    source("../scripts/SCATTERPLOT.R")
+    sca=scatterplot(data_subset,var1,var2)
+
+    #calculates Morans's I and prepares a pie chart
+    result01<-moran.test(data_subset[,match(var1,colnames(data_subset))],
+                         cont.listw)
+
+    if(result01$estimate[1]>0){
+      label = round(result01$estimate[1],4)
+      moran_stat=data.frame(groups=c('a','b'),
+                            values=c(result01$estimate[1],1-abs(result01$estimate[1])))
+      dir=1
+      col="#00b159"
+    }
+    if(result01$estimate[1]<0){
+      label = round(result01$estimate[1],4)
+      moran_stat=data.frame(groups=c('a','b'),
+                            values=c(-result01$estimate[1],1+abs(result01$estimate[1])))
+      dir=-1
+      col="#d11141"
+    }
+
+    mor=ggplot(moran_stat, aes(x="", y=values, fill=groups)) +
+      geom_bar(stat="identity", width=1) +
+      coord_polar("y", start=0, direction=dir) +
+      theme_void() +
+      scale_fill_manual(values = c(col,"#00aedb")) +
+      ggtitle(paste("Moran's I for ",var1,sep='')) +
+      theme(legend.position="none") +
+      theme(plot.title = element_text(hjust = 0.5)) +
+      geom_text(aes(y = values+0.1, label = c('',label)), color = 'white', size=7)
+
+    #finds top 10 correlated variables (considering its absolute values)
+    source("../scripts/TOP_CORRELATIONS.R")
+    vars = find_best_predictors(data_subset,var1)
+
+    #combined plot
+    grid.arrange(grobs=list(his, mor, sca, mis, tableGrob(vars, rows=NULL, theme=ttheme_minimal(base_size = 10))),
+                 layout_matrix = rbind(c(1,1,2,5),
+                                       c(3,3,4,5)))
+
+  })
+
+
+
+  # -------------------------------------------------- tab 4 -------------------------------------------------
+
+    # prepares models formula
+    fitter <- reactive({
+      
+      req(input$ChosenYear, input$DependentVariable, input$IndependentVariables, input$bars)
+
+      #prepares data subset
+      data_subset = data()[data()$rok==input$ChosenYear,
+                         match(c(input$DependentVariable, input$IndependentVariables), colnames(data()))]
+
+      #classic
+      if(input$Distance=='default: y~x'){
+        model_formula = as.formula(
+          paste(input$DependentVariable," ~ ",paste(input$IndependentVariables,
+                                                    collapse="+")))
+      }
+
+      #multinomial
+      if(input$Distance=='multinomial: y~x+x^2+x^3+x^4'){
+        model_formula = as.formula(
+          paste(input$DependentVariable," ~ ",paste(paste('poly(',input$IndependentVariables,',4)',sep=''),
+                                                    collapse="+")))
+      }
+
+      #power
+      if(input$Distance=='power: log(y)~log(x)'){
+        model_formula = as.formula(
+          paste(paste('log(',input$DependentVariable,'+1)',sep='')," ~ ",paste(paste('log(',input$IndependentVariables,'+1)',sep=''),
+                                                                               collapse="+")))
+      }
+
+      #exponential
+      if(input$Distance=='exponential: log(y)~x'){
+        model_formula = as.formula(
+          paste(input$DependentVariable," ~ ",paste(paste('log(',input$IndependentVariables,'+1)',sep=''),
+                                                    collapse="+")))
+      }
+
+      #runs OLS
+      if(input$ChosenModel=='ols'){
+        fit <- lm(model_formula, data=data_subset)
+      }
+
+      #runs Manski model
+      if(input$ChosenModel=='manski'){
+        fit <- sacsarlm(model_formula,
+                        data=data_subset,
+                        listw=cont.listw,
+                        type="sacmixed")
+      }
+
+      #runs SAC model
+      if(input$ChosenModel=='sac'){
+        fit <- sacsarlm(model_formula,
+                        data=data_subset,
+                        listw=cont.listw)
+      }
+
+      #runs SDEM model
+      if(input$ChosenModel=='sdem'){
+        fit <- errorsarlm(model_formula,
+                          data=data_subset,
+                          listw=cont.listw,
+                          etype="emixed")
+      }
+
+      #runs SEM model
+      if(input$ChosenModel=='sem'){
+        fit <- errorsarlm(model_formula,
+                          data=data_subset,
+                          listw=cont.listw)
+      }
+
+      #runs SDM model
+      if(input$ChosenModel=='sdm'){
+        fit <- lagsarlm(model_formula,
+                        data=data_subset,
+                        listw=cont.listw,
+                        type="mixed")
+      }
+
+      #runs SAR model
+      if(input$ChosenModel=='sar'){
+        fit <- lagsarlm(model_formula,
+                        data=data_subset,
+                        listw=cont.listw)
+      }
+
+      #runs SLX model
+      if(input$ChosenModel=='slx'){
+        fit <- lmSLX(model_formula,
+                     data=data_subset,
+                     listw=cont.listw)
+      }
+
+      return(fit)
+
+    })
+
+    recom <- reactive({
+      
+      req(input$ChosenYear, input$DependentVariable)
+      
+      data_subset = data()[data()$rok==input$ChosenYear,]
+
+      source("../scripts/STEPWISE_VARS.R")
+      rec=recommendation(data_subset,input$DependentVariable)
+
+      return(rec)
+    })
+
+    #returns chosen model's summary
+    output$evaluation <- renderPrint({
+      summary(fitter())
+
+    })
+
+    output$recommendation = renderPrint({
+      paste('Recommended variables are:',paste(recom(),collapse=", "))
+    })
+    
   
   })
 
