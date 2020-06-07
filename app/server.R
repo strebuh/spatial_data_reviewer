@@ -558,8 +558,8 @@ shinyServer(function(input, output){
   # -------------------------------------------------- tab 3 -------------------------------------------------
   
   
-  output$plots <- renderPlot({
-
+  get_analysis_plot <- reactive({
+    
     req(input$year, input$var, input$var2, input$bars)
     
     #all the input
@@ -567,18 +567,18 @@ shinyServer(function(input, output){
     var1 = input$var
     var2 = input$var2
     bars = input$bars
-
-    print(class(var1))
-    print(class(var2))
     
     #using one year only
     data_subset <- data()[data()$rok==input$year,]
-
+    
+    # get spatial weights matrix
+    cont.listw <- get_weigth_matrix()
+    
     #adjusting the histogram
-    if(input$x_lower=='' | input$x_upper==''){
+    if(input$x_lower == '' | input$x_upper==''){
       x_lower = summary(data_subset[,match(var1, colnames(data_subset))])[1]
       x_upper = summary(data_subset[,match(var1, colnames(data_subset))])[6]
-
+      
       x_lower = as.numeric(x_lower)
       x_upper = as.numeric(x_upper)
     }
@@ -586,24 +586,29 @@ shinyServer(function(input, output){
       x_lower = as.numeric(input$x_lower)
       x_upper = as.numeric(input$x_upper)
     }
-
+    
     #adjusted histogram
     source("../scripts/HISTOGRAM.R")
-    his=nice_histogram(as.data.frame(data_subset), match(var1,colnames(data_subset)),
-                       bars,x_lower,x_upper)
-
+    his=nice_histogram(as.data.frame(data_subset), 
+                       i = match(var1,colnames(data_subset)),
+                       bars,
+                       x_lower,
+                       x_upper)
+    
     #waffle plot with missing values
     source("../scripts/MISSINGS.R")
-    mis=missings(as.data.frame(data_subset),match(var1, colnames(data_subset)))
-
+    mis=missings(data = as.data.frame(data_subset),
+                 i = match(var1, colnames(data_subset))
+                 )
+    
     #scatterplot
     source("../scripts/SCATTERPLOT.R")
-    sca=scatterplot(data_subset,var1,var2)
-
+    sca=scatterplot(data_subset, var1, var2)
+    
     #calculates Morans's I and prepares a pie chart
-    result01<-moran.test(data_subset[,match(var1,colnames(data_subset))],
+    result01 <- moran.test(data_subset[,match(var1,colnames(data_subset))],
                          cont.listw)
-
+    
     if(result01$estimate[1]>0){
       label = round(result01$estimate[1],4)
       moran_stat=data.frame(groups=c('a','b'),
@@ -618,7 +623,7 @@ shinyServer(function(input, output){
       dir=-1
       col="#d11141"
     }
-
+    
     mor=ggplot(moran_stat, aes(x="", y=values, fill=groups)) +
       geom_bar(stat="identity", width=1) +
       coord_polar("y", start=0, direction=dir) +
@@ -628,16 +633,27 @@ shinyServer(function(input, output){
       theme(legend.position="none") +
       theme(plot.title = element_text(hjust = 0.5)) +
       geom_text(aes(y = values+0.1, label = c('',label)), color = 'white', size=7)
-
+    
     #finds top 10 correlated variables (considering its absolute values)
     source("../scripts/TOP_CORRELATIONS.R")
     vars = find_best_predictors(data_subset,var1)
-
+    
     #combined plot
-    grid.arrange(grobs=list(his, mor, sca, mis, tableGrob(vars, rows=NULL, theme=ttheme_minimal(base_size = 10))),
+    combined_plot <- grid.arrange(grobs=list(his, mor, sca, mis, tableGrob(vars, rows=NULL, theme=ttheme_minimal(base_size = 10))),
                  layout_matrix = rbind(c(1,1,2,5),
                                        c(3,3,4,5)))
-
+    
+    print(class(combined_plot))
+    
+    return(combined_plot)
+  })
+  
+  
+  output$plots <- renderPlot({
+    input$getAnalysis 
+    isolate({
+      get_analysis_plot()
+    })
   })
 
 
@@ -651,6 +667,9 @@ shinyServer(function(input, output){
   
     # prepares models formula
     fitter <- reactive({
+      
+      # get spatial weights matrix
+      cont.listw <- get_weigth_matrix()
       
       req(input$ChosenYear, input$DependentVariable, input$IndependentVariables, input$bars)
 
@@ -691,9 +710,6 @@ shinyServer(function(input, output){
         fit <- lm(model_formula, data=data_subset)
       }
 
-      # get spatial weights matrix
-      cont.listw <- get_weigth_matrix()
-      
       #runs Manski model
       if(input$ChosenModel=='manski'){
         fit <- sacsarlm(model_formula,
@@ -764,19 +780,16 @@ shinyServer(function(input, output){
       return(rec)
     })
 
-    # #returns chosen model's summary
-    # output$evaluation <- renderPrint({
-    #   input$fitModel
-    #   isolate(summary(fitter()))
-    # })
+    #returns chosen model's summary
+    output$evaluation <- renderPrint({
+      input$fitModel
+      isolate(summary(fitter()))
+    })
 
-    output$recommendation_evaluation = renderPrint({
+    output$recommendation <- renderPrint({
       input$fitModel
       isolate({
-        # paste(
-        # paste('Recommended variables are:',paste(recom(),collapse=", ")),
-        summary(fitter())
-        # , collapse="\n")
+        paste('Recommended variables are:',paste(recom(),collapse=", "))
       })
       
     })

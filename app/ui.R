@@ -243,12 +243,13 @@ shinyUI(fluidPage(
                           uiOutput("var2"),
                           
                           sliderInput("bars", "No of bars in histogram:", min = 2, max = 100, value = 20, step = 1),
-                          textInput("x_lower", "X-axis limit in histogram (lower):", ''),
-                          textInput("x_upper", "X-asix limit in histogram (upper):", '')
+                          textInput("x_lower", label = "X-axis limit in histogram (lower):", value = ''),
+                          textInput("x_upper", label = "X-asix limit in histogram (upper):", value = ''),
+                          actionButton("getAnalysis", label = "Gen Analysis")
                         ),
                         
                         mainPanel(
-                          plotOutput("plots")
+                          withSpinner(plotOutput("plots"))
                         )
                       # )
              ), # tab sie konczy
@@ -307,8 +308,9 @@ shinyUI(fluidPage(
                         ),
                         
                         mainPanel(
-                          withSpinner(verbatimTextOutput("recommendation_evaluation"))#,
-                          # withSpinner(verbatimTextOutput("evaluation"))
+                          withSpinner(verbatimTextOutput("recommendation")),
+                          br(),
+                          withSpinner(verbatimTextOutput("evaluation"))
                         )
                       # )
                       
