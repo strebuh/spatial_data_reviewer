@@ -31,8 +31,6 @@ shinyServer(function(input, output){
     # zmien nazwe zmiennej teryt, # tu wlaczyc wybieranie ktora zmienna jest wspolna
     names(data)[which(names(data) == "teryt")] = "jpt_kod_je"
     
-    print(!is.data.frame(data))
-    
     if(is.data.table(data) | tibble::is_tibble(data)){
       tryCatch({
         data <- as.data.frame(data)
@@ -43,8 +41,7 @@ shinyServer(function(input, output){
         return(NULL)
       })
     }
-    print(class(data))
-    
+
     return(data)
     })
   
