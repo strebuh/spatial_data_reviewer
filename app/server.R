@@ -492,6 +492,10 @@ shinyServer(function(input, output){
   output$staticMapOutput <- renderPlot({
     plot2()
   })
+  
+  output$palettes <- renderPlot({
+    display.brewer.all()
+  })
 
   # --- output download ---
 
