@@ -45,9 +45,6 @@ shinyUI(fluidPage(
                                                ),
                                      
                                      # choice of variable, based on variables in data
-                                     uiOutput("whichYear"),
-                                     
-                                     # choice of variable, based on variables in data
                                      uiOutput("whichName"),
                                      
                                      # choice of variable, based on variables in data
