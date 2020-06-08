@@ -56,6 +56,26 @@ shinyServer(function(input, output){
   
   # -------------------------------------------------- tab 1 -------------------------------------------------  
   
+  # year column name
+  output$whichYear <- renderUI({
+    choices <- names(data())
+    selectInput("whichYearInput", 
+                label="Year Column",
+                choices = choices,
+                multiple = FALSE,
+    )
+  })
+  
+  # spatial unit name
+  output$whichName <- renderUI({
+    choices <- names(data())
+    selectInput("whichNameInput", 
+                label="Unit name",
+                choices = choices,
+                multiple = FALSE,
+    )
+  })
+  
   # choose variable
   output$variableOutput <- renderUI({
     
@@ -73,7 +93,7 @@ shinyServer(function(input, output){
   output$areaOutput <- renderUI({
     selectInput("areaInput",
                 label="Area",
-                choices = c("Poland", unique(data()$Nazwa)))
+                choices = c("Poland", unique(data()[,input$whichNameInput])))
 
   })
   
@@ -81,7 +101,7 @@ shinyServer(function(input, output){
   output$yearOutput <- renderUI({
     selectInput("inputYear", 
                 label="Year",
-                choices = unique(data()$rok),
+                choices = unique(data()[,input$whichYearInput]),
 
                 selected = 2018)
   }) 
@@ -93,7 +113,7 @@ shinyServer(function(input, output){
                 step = 1,
                 round=TRUE,
                 sep="",
-                min = min(data()$rok), max = max(data()$rok),
+                min = min(data()[,input$whichYearInput]), max = max(data()[,input$whichYearInput]),
                 value = c(2016, 2018))
   }) 
   
@@ -122,7 +142,7 @@ shinyServer(function(input, output){
     selectInput("inputYear2", 
                 label="Year",
                 selected = 2018,
-                choices = unique(data()$rok))
+                choices = unique(data()[,input$whichYearInput]))
 
   }) 
   
@@ -162,7 +182,7 @@ shinyServer(function(input, output){
   # created text inputs for breaks, based on ranges of selected variable 
   output$fixedBreaksTexts <- renderUI({
     
-    variable <- data()[data()$rok == input$inputYear2, input$variableInput2]
+    variable <- data()[data()[,input$whichYearInput] == input$inputYear2, input$variableInput2]
 
     min_ <- min(variable)
     max_ <- max(variable)
@@ -183,7 +203,7 @@ shinyServer(function(input, output){
   output$year <- renderUI({
     selectInput("year", 
                 label = "Choose a year",
-                choices = unique(data()$rok), # c(min(data()$rok):max(data()$rok))
+                choices = unique(data()[,input$whichYearInput]), # c(min(data()[,input$whichYearInput]):max(data()[,input$whichYearInput]))
                 selected = 2018)
     })
   
@@ -204,7 +224,7 @@ shinyServer(function(input, output){
   
   output$ChosenYear <- renderUI({selectInput("ChosenYear", 
                                              label = "Year",
-                                             choices = unique(data()$rok),
+                                             choices = unique(data()[,input$whichYearInput]),
                                              selected = 2018)})
   output$DependentVariable <- renderUI({selectInput("DependentVariable", 
                                                     label = "Dependent variable",
@@ -261,14 +281,14 @@ shinyServer(function(input, output){
     
     if(input$periodType == 0){
       # if on single year
-      fitered_data1 <- data()[data()$rok == input$inputYear &
-                                data()$Nazwa %in% if(input$areaInput=="Poland") unique(data()$Nazwa) else input$areaInput, 
+      fitered_data1 <- data()[data()[,input$whichYearInput] == input$inputYear &
+                                data()[,input$whichNameInput] %in% if(input$areaInput=="Poland") unique(data()[,input$whichNameInput]) else input$areaInput, 
                               c(names(data())[1:3],input$variableInput)]
       return(fitered_data1)
     } else {
       # if range of years
-      fitered_data1 <- data()[data()$rok %in% input$inputYears[1]:input$inputYears[2] &
-                                data()$Nazwa %in% if(input$areaInput=="Poland") unique(data()$Nazwa) else input$areaInput, 
+      fitered_data1 <- data()[data()[,input$whichYearInput] %in% input$inputYears[1]:input$inputYears[2] &
+                                data()[,input$whichNameInput] %in% if(input$areaInput=="Poland") unique(data()[,input$whichNameInput]) else input$areaInput, 
                               c(names(data())[1:3],input$variableInput)]
       return(fitered_data1)
     }
@@ -282,32 +302,32 @@ shinyServer(function(input, output){
     
     if(input$periodType == 0){
       # if on single year
-      fitered_data <- data()[data()$rok == input$inputYear &
-                               data()$Nazwa %in% if(input$areaInput=="Poland") unique(data()$Nazwa) else input$areaInput, 
+      fitered_data <- data()[data()[,input$whichYearInput] == input$inputYear &
+                               data()[,input$whichNameInput] %in% if(input$areaInput=="Poland") unique(data()[,input$whichNameInput]) else input$areaInput, 
                              c(names(data())[1:3],input$variableInput)]
     } else {
       # if range of years
-      fitered_data <- data()[data()$rok %in% input$inputYears[1]:input$inputYears[2] &
-                               data()$Nazwa %in% if(input$areaInput=="Poland") unique(data()$Nazwa) else input$areaInput, 
+      fitered_data <- data()[data()[,input$whichYearInput] %in% input$inputYears[1]:input$inputYears[2] &
+                               data()[,input$whichNameInput] %in% if(input$areaInput=="Poland") unique(data()[,input$whichNameInput]) else input$areaInput, 
                              c(names(data())[1:3],input$variableInput)]
     } 
     
     # data frame for missing values, columns-years, rows-variables
-    missings = as.data.frame(matrix(NA, ncol=max(fitered_data$rok)-min(fitered_data$rok)+1, nrow=ncol(fitered_data)))
+    missings = as.data.frame(matrix(NA, ncol=max(fitered_data[,input$whichYearInput])-min(fitered_data[,input$whichYearInput])+1, nrow=ncol(fitered_data)))
     
     j=1
     # add number of missing values in each year for each variable 
-    for(i in seq(min(fitered_data$rok), max(fitered_data$rok),1)){
+    for(i in seq(min(fitered_data[,input$whichYearInput]), max(fitered_data[,input$whichYearInput]),1)){
       
       # number of missing values in given year and variable
-      col  = sapply(fitered_data[fitered_data$rok==i,], function(x) sum(is.na(x)))
+      col  = sapply(fitered_data[fitered_data[,input$whichYearInput]==i,], function(x) sum(is.na(x)))
       # input to right cell
       missings[,j] = col
       j=j+1
     }
     
     # name of columns as year
-    colnames(missings) = seq(min(fitered_data$rok), max(fitered_data$rok), 1)
+    colnames(missings) = seq(min(fitered_data[,input$whichYearInput]), max(fitered_data[,input$whichYearInput]), 1)
     
     # give NA column names
     rownames(missings) <- colnames(fitered_data)
@@ -407,7 +427,7 @@ shinyServer(function(input, output){
     # think of replacing notify by  validate() to get information <- write funciton for these
 
     # do not show anyting at the beggining, otherwise error
-    dane <- data()[data()$rok == input$inputYear2,
+    dane <- data()[data()[,input$whichYearInput] == input$inputYear2,
                  c(names(data())[2:3], "jpt_kod_je", input$variableInput2)]
 
     # if one recalculates the map in the same session, change number of groups
@@ -477,7 +497,7 @@ shinyServer(function(input, output){
     # think of replacing notify by  validate() to get information <- write funciton for these
     
     # do not show anyting at the beggining, otherwise error
-    dane <- data()[data()$rok == input$inputYear2, 
+    dane <- data()[data()[,input$whichYearInput] == input$inputYear2, 
                  c(names(data())[2:3], "jpt_kod_je", input$variableInput2)] 
     
 
@@ -581,7 +601,7 @@ shinyServer(function(input, output){
     bars = input$bars
     
     #using one year only
-    data_subset <- data()[data()$rok==input$year,]
+    data_subset <- data()[data()[,input$whichYearInput]==input$year,]
     
     # get spatial weights matrix
     cont.listw <- get_weigth_matrix()
@@ -686,7 +706,7 @@ shinyServer(function(input, output){
       req(input$ChosenYear, input$DependentVariable, input$IndependentVariables, input$bars)
 
       #prepares data subset
-      data_subset = data()[data()$rok==input$ChosenYear,
+      data_subset = data()[data()[,input$whichYearInput]==input$ChosenYear,
                          match(c(input$DependentVariable, input$IndependentVariables), colnames(data()))]
 
       #classic
@@ -784,7 +804,7 @@ shinyServer(function(input, output){
       
       req(input$ChosenYear, input$DependentVariable)
       
-      data_subset = data()[data()$rok==input$ChosenYear,]
+      data_subset = data()[data()[,input$whichYearInput]==input$ChosenYear,]
 
       source("../scripts/STEPWISE_VARS.R")
       rec=recommendation(data_subset,input$DependentVariable)
