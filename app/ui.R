@@ -47,6 +47,9 @@ shinyUI(fluidPage(
                                      # choice of variable, based on variables in data
                                      uiOutput("whichYear"),
                                      
+                                     # choice of columnwich represents name of spatial unit
+                                     uiOutput("whichName"),
+
                                      # choice of variable, based on variables in data
                                      uiOutput("variableOutput"),
                                      

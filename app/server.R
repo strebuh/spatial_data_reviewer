@@ -61,9 +61,19 @@ shinyServer(function(input, output){
     choices <- names(data())
     selectInput("whichYearInput", 
                 label="Year Column",
+                choices= choices,
+                multiple = FALSE
+                )
+    })
+                
+
+  # spatial unit name
+  output$whichName <- renderUI({
+    choices <- names(data())
+    selectInput("whichNameInput", 
+                label="Unit name",
                 choices = choices,
-                multiple = FALSE,
-    )
+                multiple = FALSE)
   })
   
   # choose variable
@@ -83,7 +93,7 @@ shinyServer(function(input, output){
   output$areaOutput <- renderUI({
     selectInput("areaInput",
                 label="Area",
-                choices = c("Poland", unique(data()$Nazwa)))
+                choices = c("Poland", unique(data()[,input$whichNameInput])))
 
   })
   
@@ -271,14 +281,24 @@ shinyServer(function(input, output){
     
     if(input$periodType == 0){
       # if on single year
+# <<<<<<< HEAD
       fitered_data1 <- data()[data()[,input$whichYearInput] == input$inputYear &
-                                data()$Nazwa %in% if(input$areaInput=="Poland") unique(data()$Nazwa) else input$areaInput, 
+                                data()[,input$whichNameInput] %in% if(input$areaInput=="Poland") unique(data()[,input$whichNameInput]) else input$areaInput, 
+# =======
+#       fitered_data1 <- data()[data()$rok == input$inputYear &
+#                                 data()[,input$whichNameInput] %in% if(input$areaInput=="Poland") unique(data()[,input$whichNameInput]) else input$areaInput, 
+# >>>>>>> name_col_choice
                               c(names(data())[1:3],input$variableInput)]
       return(fitered_data1)
     } else {
       # if range of years
+# <<<<<<< HEAD
       fitered_data1 <- data()[data()[,input$whichYearInput] %in% input$inputYears[1]:input$inputYears[2] &
-                                data()$Nazwa %in% if(input$areaInput=="Poland") unique(data()$Nazwa) else input$areaInput, 
+                                data()[,input$whichNameInput] %in% if(input$areaInput=="Poland") unique(data()[,input$whichNameInput]) else input$areaInput, 
+# =======
+#       fitered_data1 <- data()[data()$rok %in% input$inputYears[1]:input$inputYears[2] &
+#                                 data()[,input$whichNameInput] %in% if(input$areaInput=="Poland") unique(data()[,input$whichNameInput]) else input$areaInput, 
+# >>>>>>> name_col_choice
                               c(names(data())[1:3],input$variableInput)]
       return(fitered_data1)
     }
@@ -292,13 +312,23 @@ shinyServer(function(input, output){
     
     if(input$periodType == 0){
       # if on single year
+# <<<<<<< HEAD
       fitered_data <- data()[data()[,input$whichYearInput] == input$inputYear &
-                               data()$Nazwa %in% if(input$areaInput=="Poland") unique(data()$Nazwa) else input$areaInput, 
+                               data()[,input$whichNameInput] %in% if(input$areaInput=="Poland") unique(data()[,input$whichNameInput]) else input$areaInput, 
                              c(names(data())[1:3],input$variableInput)]
     } else {
       # if range of years
       fitered_data <- data()[data()[,input$whichYearInput] %in% input$inputYears[1]:input$inputYears[2] &
-                               data()$Nazwa %in% if(input$areaInput=="Poland") unique(data()$Nazwa) else input$areaInput, 
+                               data()[,input$whichNameInput] %in% if(input$areaInput=="Poland") unique(data()[,input$whichNameInput]) else input$areaInput, 
+# =======
+#       fitered_data <- data()[data()$rok == input$inputYear &
+#                                data()[,input$whichNameInput] %in% if(input$areaInput=="Poland") unique(data()[,input$whichNameInput]) else input$areaInput, 
+#                              c(names(data())[1:3],input$variableInput)]
+#     } else {
+#       # if range of years
+#       fitered_data <- data()[data()$rok %in% input$inputYears[1]:input$inputYears[2] &
+#                                data()[,input$whichNameInput] %in% if(input$areaInput=="Poland") unique(data()[,input$whichNameInput]) else input$areaInput, 
+# >>>>>>> name_col_choice
                              c(names(data())[1:3],input$variableInput)]
     } 
     
