@@ -62,8 +62,7 @@ shinyServer(function(input, output){
     selectInput("whichSpIdInput", 
                 label="Spatial ID",
                 choices = choices,
-                multiple = FALSE,
-                selected = "jpt_kod_je"
+                multiple = FALSE
     )
   })
   
