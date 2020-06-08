@@ -100,8 +100,21 @@ shinyUI(fluidPage(
                                      uiOutput("yearOutput2"),
 
                                      uiOutput("titleOutput"),
-
-                                     uiOutput("paletteOutput"),
+                                     
+                                     fluidRow(
+                                       column(6, 
+                                              uiOutput("paletteOutput")
+                                       ),
+                                       column(6,
+                                              br(),
+                                              checkboxInput("showPalettes",
+                                                            label = "Show Palettes",
+                                                            value = FALSE
+                                              )
+                                       )
+                                     ),
+                                     
+                                     # uiOutput("paletteOutput"),
 
                                      selectInput("groupingTypeInput",
                                                  label = "Type of grouping",
@@ -207,22 +220,32 @@ shinyUI(fluidPage(
                                               )
                                        )
                                      ),
+                      
                       mainPanel(
-                        column(12, align="center",
-                               conditionalPanel(
-                                 condition = "input.staticMap == false",
-                                 # textOutput("staticMapOff"),
-                                 br(),
-                                 withSpinner(highchartOutput("interactiveMapOutput", height = "730px", width = "100%"))
-                                 ),
-                                 conditionalPanel(
-                                 condition = "input.staticMap == true",
-                                 # textOutput("staticMapOn"),
-                                 br(),
-                                 withSpinner(plotOutput("staticMapOutput", height = "630px", width = "70%"))
-                                 )
-                               )
-                        )
+                        tabsetPanel(type = "tabs",
+                                    tabPanel("Maps", 
+                                             # column(12, align="center",
+                                             conditionalPanel(
+                                               condition = "input.staticMap == false",
+                                               # textOutput("staticMapOff"),
+                                               br(),
+                                               withSpinner(highchartOutput("interactiveMapOutput", height = "600px", width = "100%"))
+                                             ),
+                                             conditionalPanel(
+                                               condition = "input.staticMap == true",
+                                               # textOutput("staticMapOn"),
+                                               br(),
+                                               withSpinner(plotOutput("staticMapOutput", height = "500px", width = "70%"))
+                                             )
+                                             # ) # column end
+                                    ), # tabPanel end
+                                    tabPanel("Palettes colors",
+                                             conditionalPanel(condition = "input.showPalettes == true", 
+                                                              plotOutput("palettes", height = "800px")
+                                             )
+                                    ) # tabPanel
+                        ) # tabsetPanel
+                      ) # mainPanel
                       ), # tab sie konczy
              
              # -------------------------------------------------- tab 3 -------------------------------------------------  

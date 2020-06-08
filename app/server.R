@@ -142,6 +142,14 @@ shinyServer(function(input, output){
                 choices = row.names(brewer.pal.info))
   }) 
   
+  # choose palette
+  output$paletteOutput <- renderUI({
+    selectInput("inputPalette",
+                label="Palette",
+                selected = "BuPu",
+                choices = row.names(brewer.pal.info))
+  }) 
+  
   
   # select seed to bclust or kmeans
   output$seedOutput <- renderUI({
@@ -531,6 +539,10 @@ shinyServer(function(input, output){
   plot2 <- eventReactive(input$filterAction3, static_map())
   output$staticMapOutput <- renderPlot({
     plot2()
+  })
+  
+  output$palettes <- renderPlot({
+    display.brewer.all()
   })
 
   # --- output download ---
