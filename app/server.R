@@ -360,7 +360,7 @@ shinyServer(function(input, output){
 
     # do not show anyting at the beggining, otherwise error
     dane <- data()[data()$rok == input$inputYear2,
-                 c(names(data)[2:3], "jpt_kod_je", input$variableInput2)]
+                 c(names(data())[2:3], "jpt_kod_je", input$variableInput2)]
 
     # if one recalculates the map in the same session, change number of groups
     if(input$bucketingTypeInput == 1){
