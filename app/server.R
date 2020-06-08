@@ -56,6 +56,17 @@ shinyServer(function(input, output){
   
   # -------------------------------------------------- tab 1 -------------------------------------------------  
   
+  # spatial unit identifyer
+  output$whichSpID <- renderUI({
+    choices <- names(data())
+    selectInput("whichSpIdInput", 
+                label="Spatial ID",
+                choices = choices,
+                multiple = FALSE,
+                selected = "jpt_kod_je"
+    )
+  })
+  
   # choose variable
   output$variableOutput <- renderUI({
     
