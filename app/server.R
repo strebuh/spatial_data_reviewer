@@ -62,8 +62,7 @@ shinyServer(function(input, output){
     selectInput("whichYearInput", 
                 label="Year Column",
                 choices= choices,
-                multiple = FALSE
-                )
+                multiple = FALSE)
     })
                 
 
@@ -72,6 +71,16 @@ shinyServer(function(input, output){
     choices <- names(data())
     selectInput("whichNameInput", 
                 label="Unit name",
+                choices = choices,
+                multiple = FALSE)
+  })
+    
+    
+  # spatial unit identifyer
+  output$whichSpID <- renderUI({
+    choices <- names(data())
+    selectInput("whichSpIdInput", 
+                label="Spatial ID",
                 choices = choices,
                 multiple = FALSE)
   })
