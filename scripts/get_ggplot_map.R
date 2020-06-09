@@ -109,7 +109,7 @@ get_ggplot_map <- function(
     scale_fill_manual(values = colors) +
     ggtitle(title) +
     theme_void() + 
-    theme(plot.title = element_text(hjust = 0.5, size = title_size, face = "bold"),
+    theme(plot.title = element_text(hjust = 0.5, size = title_size), #, face = "bold"),
           legend.text=element_text(size = legend_title_size),
           legend.title=element_text(size = legend_label_size))
   
