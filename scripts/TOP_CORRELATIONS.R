@@ -1,6 +1,6 @@
 find_best_predictors = function(data_lr,y_name){
   
-  data_lr=data_lr[,-match(c('Kod','Nazwa','rok','jpt_kod_je'),colnames(data_lr))]
+  data_lr=data_lr[,-na.omit(match(c('Kod','Nazwa','rok','jpt_kod_je','teryt'),colnames(data_lr)))]
   
   to_remove = c()
   for(i in c(1:ncol(data_lr))){
@@ -18,14 +18,16 @@ find_best_predictors = function(data_lr,y_name){
   useful_vars$correlation = useful_vars$x
   useful_vars$abs = abs(useful_vars$correlation)
   
+  colnames(useful_vars)
+  
   useful_vars = useful_vars %>%
     arrange(desc(abs)) %>%
-    top_n(21) %>%
-    select(-x) %>%
-    select(-abs)
+    top_n(21)
   
-  useful_vars = useful_vars[-1,]
-    
+  useful_vars = useful_vars[-1,-c(1,4)]
+  
+  useful_vars$correlation = round(useful_vars$correlation,4)
+  
   return(useful_vars)
   
 }
