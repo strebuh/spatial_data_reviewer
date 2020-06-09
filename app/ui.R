@@ -45,6 +45,15 @@ shinyUI(fluidPage(
                                                ),
                                      
                                      # choice of variable, based on variables in data
+                                     uiOutput("whichYear"),
+                                     
+                                     # choice of column which represents name of spatial unit
+                                     uiOutput("whichName"),
+
+                                     # choice of column which represents ID of spatial unit, in common with spation file
+                                     uiOutput("whichSpID"),
+                                     
+                                     # choice of variable, based on variables in data
                                      uiOutput("variableOutput"),
                                      
                                      # choice of voivodship
