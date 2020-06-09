@@ -8,10 +8,11 @@ library(backports)
 library(shinycssloaders)
 library(rgdal)
 
-
+source("../scripts/PACKAGES.R")
 source("../scripts/get_static_map.R")
 source("../scripts/get_interactive_map.R")
 source("../scripts/get_ggplot_map.R")
+
 
 # input$dataFile
 data <- NULL
@@ -25,6 +26,10 @@ options(shiny.maxRequestSize=30*1024^2)
 pov_sp <- NULL
 
 shinyServer(function(input, output){
+  
+  # suppress warnings  
+  storeWarn<- getOption("warn")
+  options(warn = -1) 
 
   data <- reactive({
     
@@ -55,6 +60,35 @@ shinyServer(function(input, output){
   
   # -------------------------------------------------- tab 1 -------------------------------------------------  
   
+  # year column name
+  output$whichYear <- renderUI({
+    choices <- names(data())
+    selectInput("whichYearInput", 
+                label="Year Column",
+                choices= choices,
+                multiple = FALSE)
+    })
+                
+
+  # spatial unit name
+  output$whichName <- renderUI({
+    choices <- names(data())
+    selectInput("whichNameInput", 
+                label="Unit name",
+                choices = choices,
+                multiple = FALSE)
+  })
+    
+    
+  # spatial unit identifyer
+  output$whichSpID <- renderUI({
+    choices <- names(data())
+    selectInput("whichSpIdInput", 
+                label="Spatial ID",
+                choices = choices,
+                multiple = FALSE)
+  })
+  
   # choose variable
   output$variableOutput <- renderUI({
     
@@ -72,7 +106,7 @@ shinyServer(function(input, output){
   output$areaOutput <- renderUI({
     selectInput("areaInput",
                 label="Area",
-                choices = c("Poland", unique(data()$Nazwa)))
+                choices = c("Poland", unique(data()[,input$whichNameInput])))
 
   })
   
@@ -80,7 +114,7 @@ shinyServer(function(input, output){
   output$yearOutput <- renderUI({
     selectInput("inputYear", 
                 label="Year",
-                choices = unique(data()$rok),
+                choices = unique(data()[,input$whichYearInput]),
 
                 selected = 2018)
   }) 
@@ -92,7 +126,7 @@ shinyServer(function(input, output){
                 step = 1,
                 round=TRUE,
                 sep="",
-                min = min(data()$rok), max = max(data()$rok),
+                min = min(data()[,input$whichYearInput]), max = max(data()[,input$whichYearInput]),
                 value = c(2016, 2018))
   }) 
   
@@ -121,7 +155,7 @@ shinyServer(function(input, output){
     selectInput("inputYear2", 
                 label="Year",
                 selected = 2018,
-                choices = unique(data()$rok))
+                choices = unique(data()[,input$whichYearInput]))
 
   }) 
   
@@ -132,6 +166,14 @@ shinyServer(function(input, output){
               value = paste("Plot of", input$variableInput2 ,"in", input$inputYear2)
     )
   })
+  
+  # choose palette
+  output$paletteOutput <- renderUI({
+    selectInput("inputPalette",
+                label="Palette",
+                selected = "BuPu",
+                choices = row.names(brewer.pal.info))
+  }) 
   
   # choose palette
   output$paletteOutput <- renderUI({
@@ -153,7 +195,7 @@ shinyServer(function(input, output){
   # created text inputs for breaks, based on ranges of selected variable 
   output$fixedBreaksTexts <- renderUI({
     
-    variable <- data()[data()$rok == input$inputYear2, input$variableInput2]
+    variable <- data()[data()[,input$whichYearInput] == input$inputYear2, input$variableInput2]
 
     min_ <- min(variable)
     max_ <- max(variable)
@@ -168,6 +210,45 @@ shinyServer(function(input, output){
           bs_embed_tooltip(title = "Replace underscores with break values separated by space")
       )
   })
+  
+  # -------------------------------------------------- tab 3 -------------------------------------------------  
+  
+  output$year <- renderUI({
+    selectInput("year", 
+                label = "Choose a year",
+                choices = unique(data()[,input$whichYearInput]), # c(min(data()[,input$whichYearInput]):max(data()[,input$whichYearInput]))
+                selected = 2018)
+    })
+  
+  output$var <- renderUI({selectInput("var", 
+                                      label = "Choose a variable",
+                                      choices = colnames(data()),
+                                      selected = 'kob_w_bezrob')})
+  
+  output$var2 <- renderUI({selectInput("var2",
+                                       label = "Choose another variable for scatterplot",
+                                       choices = colnames(data()),
+                                       selected = 'bezrob_proc')})
+
+  
+  
+  
+  # -------------------------------------------------- tab 4 -------------------------------------------------  
+  
+  output$ChosenYear <- renderUI({selectInput("ChosenYear", 
+                                             label = "Year",
+                                             choices = unique(data()[,input$whichYearInput]),
+                                             selected = 2018)})
+  output$DependentVariable <- renderUI({selectInput("DependentVariable", 
+                                                    label = "Dependent variable",
+                                                    choices = colnames(data()),
+                                                    selected = 'kob_w_bezrob')})
+  output$IndependentVariables <- renderUI({selectInput("IndependentVariables", 
+                                                       label = "Independent variables",
+                                                       choices = colnames(data()),
+                                                       selected = "bezrob_proc",
+                                                       multiple = TRUE)})
+
   
   
   # -------------------------------------------------- functions and outoputs -------------------------------------------------
@@ -213,53 +294,56 @@ shinyServer(function(input, output){
     
     if(input$periodType == 0){
       # if on single year
-      fitered_data1 <- data()[data()$rok == input$inputYear &
-                                data()$Nazwa %in% if(input$areaInput=="Poland") unique(data()$Nazwa) else input$areaInput, 
+      fitered_data1 <- data()[data()[,input$whichYearInput] == input$inputYear &
+                                data()[,input$whichNameInput] %in% if(input$areaInput=="Poland") unique(data()[,input$whichNameInput]) else input$areaInput, 
+
                               c(names(data())[1:3],input$variableInput)]
       return(fitered_data1)
     } else {
-      # if range of years
-      fitered_data1 <- data()[data()$rok %in% input$inputYears[1]:input$inputYears[2] &
-                                data()$Nazwa %in% if(input$areaInput=="Poland") unique(data()$Nazwa) else input$areaInput, 
+
+      fitered_data1 <- data()[data()[,input$whichYearInput] %in% input$inputYears[1]:input$inputYears[2] &
+                                data()[,input$whichNameInput] %in% if(input$areaInput=="Poland") unique(data()[,input$whichNameInput]) else input$areaInput, 
+
                               c(names(data())[1:3],input$variableInput)]
       return(fitered_data1)
     }
   })
   
   # function for displaying missings
-  missings <- reactive({
+  missings_df <- reactive({
     
     # filter data, filtered is reactive, thus will not be null, always gets generated
     req(input$variableInput)
     
     if(input$periodType == 0){
       # if on single year
-      fitered_data <- data()[data()$rok == input$inputYear &
-                               data()$Nazwa %in% if(input$areaInput=="Poland") unique(data()$Nazwa) else input$areaInput, 
+      fitered_data <- data()[data()[,input$whichYearInput] == input$inputYear &
+                               data()[,input$whichNameInput] %in% if(input$areaInput=="Poland") unique(data()[,input$whichNameInput]) else input$areaInput, 
                              c(names(data())[1:3],input$variableInput)]
     } else {
       # if range of years
-      fitered_data <- data()[data()$rok %in% input$inputYears[1]:input$inputYears[2] &
-                               data()$Nazwa %in% if(input$areaInput=="Poland") unique(data()$Nazwa) else input$areaInput, 
+      fitered_data <- data()[data()[,input$whichYearInput] %in% input$inputYears[1]:input$inputYears[2] &
+                               data()[,input$whichNameInput] %in% if(input$areaInput=="Poland") unique(data()[,input$whichNameInput]) else input$areaInput, 
+
                              c(names(data())[1:3],input$variableInput)]
     } 
     
     # data frame for missing values, columns-years, rows-variables
-    missings = as.data.frame(matrix(NA, ncol=max(fitered_data$rok)-min(fitered_data$rok)+1, nrow=ncol(fitered_data)))
+    missings = as.data.frame(matrix(NA, ncol=max(fitered_data[,input$whichYearInput])-min(fitered_data[,input$whichYearInput])+1, nrow=ncol(fitered_data)))
     
     j=1
     # add number of missing values in each year for each variable 
-    for(i in seq(min(fitered_data$rok), max(fitered_data$rok),1)){
+    for(i in seq(min(fitered_data[,input$whichYearInput]), max(fitered_data[,input$whichYearInput]),1)){
       
       # number of missing values in given year and variable
-      col  = sapply(fitered_data[fitered_data$rok==i,], function(x) sum(is.na(x)))
+      col  = sapply(fitered_data[fitered_data[,input$whichYearInput]==i,], function(x) sum(is.na(x)))
       # input to right cell
       missings[,j] = col
       j=j+1
     }
     
     # name of columns as year
-    colnames(missings) = seq(min(fitered_data$rok), max(fitered_data$rok), 1)
+    colnames(missings) = seq(min(fitered_data[,input$whichYearInput]), max(fitered_data[,input$whichYearInput]), 1)
     
     # give NA column names
     rownames(missings) <- colnames(fitered_data)
@@ -289,7 +373,7 @@ shinyServer(function(input, output){
   output$missingsOutput <- DT::renderDataTable({
     input$filterMissings
     isolate({
-      missings()
+      missings_df()
     })
   })
   
@@ -359,7 +443,7 @@ shinyServer(function(input, output){
     # think of replacing notify by  validate() to get information <- write funciton for these
 
     # do not show anyting at the beggining, otherwise error
-    dane <- data()[data()$rok == input$inputYear2,
+    dane <- data()[data()[,input$whichYearInput] == input$inputYear2,
                  c(names(data())[2:3], "jpt_kod_je", input$variableInput2)]
 
     # if one recalculates the map in the same session, change number of groups
@@ -429,7 +513,7 @@ shinyServer(function(input, output){
     # think of replacing notify by  validate() to get information <- write funciton for these
     
     # do not show anyting at the beggining, otherwise error
-    dane <- data()[data()$rok == input$inputYear2, 
+    dane <- data()[data()[,input$whichYearInput] == input$inputYear2, 
                  c(names(data())[2:3], "jpt_kod_je", input$variableInput2)] 
     
 
@@ -521,8 +605,243 @@ shinyServer(function(input, output){
   
   # -------------------------------------------------- tab 3 -------------------------------------------------
   
-  # -------------------------------------------------- tab 4 -------------------------------------------------
   
+  get_analysis_plot <- reactive({
+    
+    req(input$year, input$var, input$var2, input$bars)
+    
+    #all the input
+    year = input$year
+    var1 = input$var
+    var2 = input$var2
+    bars = input$bars
+    
+    #using one year only
+    data_subset <- data()[data()[,input$whichYearInput]==input$year,]
+    
+    # get spatial weights matrix
+    cont.listw <- get_weigth_matrix()
+    
+    #adjusting the histogram
+    if(input$x_lower == '' | input$x_upper==''){
+      x_lower = summary(data_subset[,match(var1, colnames(data_subset))])[1]
+      x_upper = summary(data_subset[,match(var1, colnames(data_subset))])[6]
+      
+      x_lower = as.numeric(x_lower)
+      x_upper = as.numeric(x_upper)
+    }
+    else{
+      x_lower = as.numeric(input$x_lower)
+      x_upper = as.numeric(input$x_upper)
+    }
+    
+    #adjusted histogram
+    source("../scripts/HISTOGRAM.R")
+    his=nice_histogram(as.data.frame(data_subset), 
+                       match(var1,colnames(data_subset)),
+                       bars,
+                       x_lower,
+                       x_upper)
+    
+    #waffle plot with missing values
+    source("../scripts/MISSINGS.R")
+    mis=missings(as.data.frame(data_subset),
+                 match(var1, colnames(data_subset))
+                 )
+    
+    #scatterplot
+    source("../scripts/SCATTERPLOT.R")
+    sca=scatterplot(as.data.frame(data_subset), var1, var2)
+    
+    #calculates Morans's I and prepares a pie chart
+    result01 <- moran.test(data_subset[,match(var1,colnames(data_subset))],
+                         cont.listw)
+    
+    if(result01$estimate[1]>0){
+      label = round(result01$estimate[1],4)
+      moran_stat_df <- data.frame(groups=c('a','b'),
+                            values=c(result01$estimate[1],1-abs(result01$estimate[1])))
+      dir=1
+      col="#00b159"
+    }
+    if(result01$estimate[1]<0){
+      label = round(result01$estimate[1],4)
+      moran_stat_df <- data.frame(groups=c('a','b'),
+                            values=c(-result01$estimate[1],1+abs(result01$estimate[1])))
+      dir=-1
+      col="#d11141"
+    }
+    
+    mor <- ggplot(moran_stat_df, aes(x="", y=values, fill=groups)) +
+      geom_bar(stat="identity", width=1) +
+      coord_polar("y", start=0, direction=dir) +
+      theme_void() +
+      scale_fill_manual(values = c(col,"#00aedb")) +
+      ggtitle(paste("Moran's I for ",var1,sep='')) +
+      theme(legend.position="none") +
+      theme(plot.title = element_text(hjust = 0.5)) +
+      geom_text(aes(y = values+0.1, label = c('',label)), color = 'white', size=7)
+    
+    #finds top 10 correlated variables (considering its absolute values)
+    source("../scripts/TOP_CORRELATIONS.R")
+    vars = find_best_predictors(data_subset, var1)
+    
+    #combined plot
+    combined_plot <- grid.arrange(grobs=list(his, mor, sca, mis, tableGrob(vars, rows=NULL, theme=ttheme_minimal(base_size = 10))),
+                 layout_matrix = rbind(c(1,1,2,5),
+                                       c(3,3,4,5)))
+    
+    print(class(combined_plot))
+    
+    return(combined_plot)
+  })
+  
+  
+  output$plots <- renderPlot({
+    input$getAnalysis 
+    isolate({
+      get_analysis_plot()
+    })
+  })
+
+
+
+  # -------------------------------------------------- tab 4 -------------------------------------------------
+
+  get_weigth_matrix <- reactive({
+    cont.nb<-poly2nb(as(sp_map(), "SpatialPolygons"))
+    cont.listw<-nb2listw(cont.nb, style="W")
+  })
+  
+    # prepares models formula
+    fitter <- reactive({
+      
+      # get spatial weights matrix
+      cont.listw <- get_weigth_matrix()
+      
+      req(input$ChosenYear, input$DependentVariable, input$IndependentVariables, input$bars)
+
+      #prepares data subset
+      data_subset = data()[data()[,input$whichYearInput]==input$ChosenYear,
+                         match(c(input$DependentVariable, input$IndependentVariables), colnames(data()))]
+
+      #classic
+      if(input$Distance=='default: y~x'){
+        model_formula = as.formula(
+          paste(input$DependentVariable," ~ ",paste(input$IndependentVariables,
+                                                    collapse="+")))
+      }
+
+      #multinomial
+      if(input$Distance=='multinomial: y~x+x^2+x^3+x^4'){
+        model_formula = as.formula(
+          paste(input$DependentVariable," ~ ",paste(paste('poly(',input$IndependentVariables,',4)',sep=''),
+                                                    collapse="+")))
+      }
+
+      #power
+      if(input$Distance=='power: log(y)~log(x)'){
+        model_formula = as.formula(
+          paste(paste('log(',input$DependentVariable,'+1)',sep='')," ~ ",paste(paste('log(',input$IndependentVariables,'+1)',sep=''),
+                                                                               collapse="+")))
+      }
+
+      #exponential
+      if(input$Distance=='exponential: log(y)~x'){
+        model_formula = as.formula(
+          paste(input$DependentVariable," ~ ",paste(paste('log(',input$IndependentVariables,'+1)',sep=''),
+                                                    collapse="+")))
+      }
+
+      #runs OLS
+      if(input$ChosenModel=='ols'){
+        fit <- lm(model_formula, data=data_subset)
+      }
+
+      #runs Manski model
+      if(input$ChosenModel=='manski'){
+        fit <- sacsarlm(model_formula,
+                        data=data_subset,
+                        listw=cont.listw,
+                        type="sacmixed")
+      }
+
+      #runs SAC model
+      if(input$ChosenModel=='sac'){
+        fit <- sacsarlm(model_formula,
+                        data=data_subset,
+                        listw=cont.listw)
+      }
+
+      #runs SDEM model
+      if(input$ChosenModel=='sdem'){
+        fit <- errorsarlm(model_formula,
+                          data=data_subset,
+                          listw=cont.listw,
+                          etype="emixed")
+      }
+
+      #runs SEM model
+      if(input$ChosenModel=='sem'){
+        fit <- errorsarlm(model_formula,
+                          data=data_subset,
+                          listw=cont.listw)
+      }
+
+      #runs SDM model
+      if(input$ChosenModel=='sdm'){
+        fit <- lagsarlm(model_formula,
+                        data=data_subset,
+                        listw=cont.listw,
+                        type="mixed")
+      }
+
+      #runs SAR model
+      if(input$ChosenModel=='sar'){
+        fit <- lagsarlm(model_formula,
+                        data=data_subset,
+                        listw=cont.listw)
+      }
+
+      #runs SLX model
+      if(input$ChosenModel=='slx'){
+        fit <- lmSLX(model_formula,
+                     data=data_subset,
+                     listw=cont.listw)
+      }
+
+      print(class(fit))
+      
+      return(fit)
+
+    })
+
+    recom <- reactive({
+      
+      req(input$ChosenYear, input$DependentVariable)
+      
+      data_subset = data()[data()[,input$whichYearInput]==input$ChosenYear,]
+
+      source("../scripts/STEPWISE_VARS.R")
+      rec=recommendation(data_subset,input$DependentVariable)
+
+      return(rec)
+    })
+
+    #returns chosen model's summary
+    output$evaluation <- renderPrint({
+      input$fitModel
+      isolate(summary(fitter()))
+    })
+
+    output$recommendation <- renderPrint({
+      input$fitModel
+      isolate({
+        paste('Recommended variables are:',paste(recom(),collapse=", "))
+      })
+      
+    })
+    
   
   })
 
