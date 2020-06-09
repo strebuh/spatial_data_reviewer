@@ -21,7 +21,7 @@ shinyUI(fluidPage(
   ),
   
   # upper darg green bar
-  navbarPage("Poviat flat prices",
+  navbarPage("Spatial Data Reviewer",
              
              # -------------------------------------------------- tab 1 -------------------------------------------------  
              tabPanel("Data",
@@ -224,20 +224,20 @@ shinyUI(fluidPage(
                       mainPanel(
                         tabsetPanel(type = "tabs",
                                     tabPanel("Maps", 
-                                             # column(12, align="center",
+                                             column(12, align="center",
                                              conditionalPanel(
                                                condition = "input.staticMap == false",
                                                # textOutput("staticMapOff"),
                                                br(),
-                                               withSpinner(highchartOutput("interactiveMapOutput", height = "600px", width = "100%"))
+                                               withSpinner(highchartOutput("interactiveMapOutput", height = "730px", width = "100%"))
                                              ),
                                              conditionalPanel(
                                                condition = "input.staticMap == true",
                                                # textOutput("staticMapOn"),
                                                br(),
-                                               withSpinner(plotOutput("staticMapOutput", height = "500px", width = "70%"))
+                                               withSpinner(plotOutput("staticMapOutput", height = "670px", width = "70%"))
                                              )
-                                             # ) # column end
+                                             ) # column end
                                     ), # tabPanel end
                                     tabPanel("Palettes colors",
                                              conditionalPanel(condition = "input.showPalettes == true", 

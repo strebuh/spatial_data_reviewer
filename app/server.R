@@ -26,6 +26,10 @@ options(shiny.maxRequestSize=30*1024^2)
 pov_sp <- NULL
 
 shinyServer(function(input, output){
+  
+  # suppress warnings  
+  storeWarn<- getOption("warn")
+  options(warn = -1) 
 
   data <- reactive({
     
