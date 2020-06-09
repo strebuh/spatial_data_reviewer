@@ -2,7 +2,7 @@ library(data.table)
 library(stringr)
 library(RColorBrewer)
 library(classInt)
-library(broom)
+library(broom, warn.conflicts = FALSE)
 
 get_ggplot_map <- function(
   plot_data,                                  # frame with data (variables)
