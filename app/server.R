@@ -17,18 +17,18 @@ source("../scripts/get_ggplot_map.R")
 # input$dataFile
 data <- NULL
 pov_json_list <- NULL
+pov_sp <- NULL
+
 
 # pov_json_list <- readRDS("../data/poviaty_json_list.RDS")
 
 options(shiny.maxRequestSize=30*1024^2)
 
 
-pov_sp <- NULL
-
 shinyServer(function(input, output){
   
   # suppress warnings  
-  storeWarn<- getOption("warn")
+  storeWarn <- getOption("warn")
   options(warn = -1) 
 
   data <- reactive({
@@ -37,6 +37,16 @@ shinyServer(function(input, output){
       data <- readRDS("../data/data06_18_contig_na_fill.RDS") 
     } else {
       data <- upload()
+    }
+    
+    # if(is.null(data)){
+    #   showNotification("Make sure You uploaded correct file format!",
+    #                    type="error",
+    #                    duration = 7)
+    #   return(NULL)
+    # }
+    if(is.null(data)){
+      return(NULL)
     }
     
     # zmien nazwe zmiennej teryt, # tu wlaczyc wybieranie ktora zmienna jest wspolna
@@ -62,7 +72,11 @@ shinyServer(function(input, output){
   
   # year column name
   output$whichYear <- renderUI({
-    choices <- names(data())
+    data <- data()
+    if(is.null(data)){
+      return(NULL)
+    } 
+    choices <- names(data())  
     selectInput("whichYearInput", 
                 label="Year Column",
                 choices= choices,
@@ -72,7 +86,11 @@ shinyServer(function(input, output){
 
   # spatial unit name
   output$whichName <- renderUI({
-    choices <- names(data())
+    data <- data()
+    if(is.null(data)){
+      return(NULL)
+    } 
+    choices <- names(data())  
     selectInput("whichNameInput", 
                 label="Unit name",
                 choices = choices,
@@ -82,7 +100,11 @@ shinyServer(function(input, output){
     
   # spatial unit identifyer
   output$whichSpID <- renderUI({
-    choices <- names(data())
+    data <- data()
+    if(is.null(data)){
+      return(NULL)
+    } 
+    choices <- names(data())  
     selectInput("whichSpIdInput", 
                 label="Spatial ID",
                 choices = choices,
@@ -91,9 +113,11 @@ shinyServer(function(input, output){
   
   # choose variable
   output$variableOutput <- renderUI({
-    
-    choices <- names(data())[5:length(names(data()))-1]
-
+    data <- data()
+    if(is.null(data)){
+      return(NULL)
+    } 
+    choices <- names(data())  
     selectInput("variableInput", 
                 label="Variables",
                 choices = choices,
@@ -104,30 +128,53 @@ shinyServer(function(input, output){
   
   # choose area
   output$areaOutput <- renderUI({
+    data <- data()
+    if(is.null(data)){
+      return(NULL)}
     selectInput("areaInput",
                 label="Area",
-                choices = c("Poland", unique(data()[,input$whichNameInput])))
+                choices = c("All", unique(data()[,input$whichNameInput])))
 
   })
   
-  # choose single year 
-  output$yearOutput <- renderUI({
-    selectInput("inputYear", 
-                label="Year",
-                choices = unique(data()[,input$whichYearInput]),
-
-                selected = 2018)
-  }) 
+  # # choose single year 
+  # output$yearOutput <- renderUI({
+  #   selectInput("inputYear", 
+  #               label="Year",
+  #               choices = unique(data()[,input$whichYearInput]),
+  # 
+  #               selected = 2018)
+  # }) 
   
   # choose range of years
   output$yearsOutput <- renderUI({
+    req(input$whichYearInput)
+    if(is.null(data())){
+      return(NULL)
+    }
+    
+    if((input$fileType == 1 & grepl("(.rds)$|(.RDS)$", input$dataFile$datapath))|
+       (input$fileType == 0 & grepl("(.csv)$|(.CSV)$", input$dataFile$datapath))|
+       !grepl("(.csv)$|(.CSV)$|(.rds)$|(.RDS)$", input$dataFile$datapath)
+    ){
+      # showNotification("File format doesn't match the choice!",
+      #                  type="error",
+      #                  duration = 7)
+      return(NULL)
+    }
+    
+    start_y <- min(data()[,input$whichYearInput])
+    end_y <- max(data()[,input$whichYearInput])
+    
     sliderInput("inputYears", 
                 label = "Years",
                 step = 1,
                 round=TRUE,
                 sep="",
-                min = min(data()[,input$whichYearInput]), max = max(data()[,input$whichYearInput]),
-                value = c(2016, 2018))
+                min = start_y, 
+                max = end_y,
+                value = c(end_y-2, end_y)
+                )
   }) 
   
   
@@ -260,8 +307,9 @@ shinyServer(function(input, output){
     
     req(input$dataFile)
     
-    if((input$fileType != 0 & !grepl("(.rds)$|(.RDS)$", input$dataFile$datapath))|
-       (input$fileType != 1 & grepl("(.csv)$|(.CSV)$", input$dataFile$datapath))
+    if((input$fileType == 1 & grepl("(.rds)$|(.RDS)$", input$dataFile$datapath))|
+       (input$fileType == 0 & grepl("(.csv)$|(.CSV)$", input$dataFile$datapath))|
+       !grepl("(.csv)$|(.CSV)$|(.rds)$|(.RDS)$", input$dataFile$datapath)
     ){
       
       showNotification("File format doesn't match the choice!",
@@ -270,11 +318,11 @@ shinyServer(function(input, output){
       return(NULL)
     }
     
-    if(input$fileType == 0){
+    if(input$fileType == 0 & grepl("(.rds)$|(.RDS)$", input$dataFile$datapath)){
       
       df <- readRDS(input$dataFile$datapath)
       
-    } else if(input$fileType == 1){
+    } else if(input$fileType == 1 & grepl("(.csv)$|(.CSV)$", input$dataFile$datapath)){
       
       df <- read.csv(input$dataFile$datapath,
                      # header = input$header,
@@ -282,8 +330,10 @@ shinyServer(function(input, output){
                      # quote = input$quote,
                      encoding = "UTF-8",
                      stringsAsFactors = F)
-    }
-    return(df)
+      return(df)
+    } else {
+        return(NULL)
+      }
   })
   
   # get data for table and plot

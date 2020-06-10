@@ -59,16 +59,18 @@ shinyUI(fluidPage(
                                      # choice of voivodship
                                      uiOutput("areaOutput"),
 
-                                     # choice of whether single year or time span
-                                     radioButtons("periodType", label = "Period Span",
-                                                  choices = list("Single Year" = 0, "Multiple Years" = 1), 
-                                                  selected = 0),
+                                     # # choice of whether single year or time span
+                                     # radioButtons("periodType", label = "Period Span",
+                                     #              choices = list("Single Year" = 0, "Multiple Years" = 1), 
+                                     #              selected = 0),
+                                     # 
+                                     # # based on period type choice
+                                     # conditionalPanel(condition="input.periodType == 0", 
+                                     #                  uiOutput("yearOutput")),
+                                     # conditionalPanel(condition="input.periodType == 1", 
+                                     #                  uiOutput("yearsOutput")),
+                                     uiOutput("yearsOutput"),
                                      
-                                     # based on period type choice
-                                     conditionalPanel(condition="input.periodType == 0", 
-                                                      uiOutput("yearOutput")),
-                                     conditionalPanel(condition="input.periodType == 1", 
-                                                      uiOutput("yearsOutput")),
                                      hr(),
                                      
                                      fluidRow(column(4, align="center",
