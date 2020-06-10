@@ -1,50 +1,46 @@
+# tab 1
+library(rgdal) # reading spatial data
+library(DT) # rendering tables
 
-library(spdep)
-library(rgdal)
-library(maptools)
-library(sp)
-library(RColorBrewer)
-library(classInt)
-library(GISTools)
-library(maps)
+library(bsplus) # tab 2, information icone
+library(stringr) # tab 2 | get_ggplot_map, interactive_map
+# library(highcharter) # tab 2 |  interactive_map
+library(RColorBrewer) # tab 2 | get_ggplot_map, interactive_map, tab2
+library(classInt) # tab 2 | get_ggplot_map, interactive_map
+library(broom, warn.conflicts = FALSE) # tab 2 | ggplot_map,
 
-library(RCurl)
-library(tidyr)
-library(ggplot2)
-library(waffle)
-library(rlist)
-library(pdp)
-library(corrplot)
-library(dplyr)
-library(caret)
-library(stringr)
-#library(data.table)
-library(texreg)
-library(spgwr)
-library(factoextra)
+library(ggplot2) # tab2 (ggplot_map), tab3, 
+library(gridExtra) # tab 3 | table grob
+# library(pdp) # tab 3 | grid.arrange() 
 
-library(spgwr)
-#library(GWmodel) 
-library(raster)
-library(fossil)
-library(flexclust) 
-library(clusteval)
-library(plot.matrix)
-library(ape) 
+# library(pdp) # tab3  | grid.arrange() but works without
+library(waffle) # tab 3
+library(dplyr) # tab 3
+library(caret) # tab 3
 
-library(shiny)
-library(ggplot2)
-library(ggpubr)
-library(gridExtra)
+library(spdep) # tab 3, tab 4
+library(MASS) # tab 4 stepAIC or library(GISTools) 
 
-library(plotly)
-library(shinythemes)
-library(shinyWidgets)
-library(highcharter)
+# not identified
+# library(ggpubr)
+# library(corrplot)
+# library(texreg)
+# library(factoextra)
+# library(ggpubr)
+# library(gridExtra)
 
-library(shiny)
-library(plotly)
-library(htmlwidgets)
-library(highcharter)
-library(bsplus)
+# # ui loaded
+# library(shinythemes)
+# library(highcharter)
+# library(shinycssloaders)
+
+# # server loaded
+# library(shiny)
+
+
+
+
+
+
+
 
