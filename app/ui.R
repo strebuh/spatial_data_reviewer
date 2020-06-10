@@ -1,6 +1,6 @@
-library(plotly)
+# library(plotly)
 library(shinythemes)
-library(shinyWidgets)
+# library(shinyWidgets)
 library(highcharter)
 library(shinycssloaders)
 
@@ -84,9 +84,9 @@ shinyUI(fluidPage(
                         mainPanel(width = 9,
                           br(),
                           tabsetPanel(type = "tabs",
-                                      tabPanel("Uploaded", DT::dataTableOutput("contents")),
-                                      tabPanel("Variables", DT::dataTableOutput("dataOutput")),
-                                      tabPanel("Missings", DT::dataTableOutput("missingsOutput")
+                                      tabPanel("Uploaded", DT::dataTableOutput("contents")), # 
+                                      tabPanel("Variables", DT::dataTableOutput("dataOutput")),  # DT::
+                                      tabPanel("Missings", DT::dataTableOutput("missingsOutput") # DT::
                                                )
                                       )
                           )
