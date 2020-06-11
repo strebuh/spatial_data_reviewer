@@ -44,6 +44,11 @@ shinyUI(fluidPage(
                                                accept = c(".csv", ".rds", ".RDS")
                                                ),
                                      
+                                     fileInput("shapeFile", "Choose shapefile File",
+                                               multiple = TRUE,
+                                               accept = c(".shp", ".dbs", ".shx", ".prj")
+                                     ),
+                                     
                                      # choice of variable, based on variables in data
                                      uiOutput("whichYear"),
                                      
@@ -86,6 +91,8 @@ shinyUI(fluidPage(
                         mainPanel(width = 9,
                           br(),
                           tabsetPanel(type = "tabs",
+                                      tabPanel("messsges", DT::dataTableOutput("shpPath")),
+                                      tabPanel("contour", plotOutput("shpMap")),
                                       tabPanel("Uploaded", DT::dataTableOutput("contents")), # 
                                       tabPanel("Variables", DT::dataTableOutput("dataOutput")),  # DT::
                                       tabPanel("Missings", DT::dataTableOutput("missingsOutput") # DT::

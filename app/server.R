@@ -309,7 +309,7 @@ shinyServer(function(input, output){
     
     if((input$fileType == 1 & grepl("(.rds)$|(.RDS)$", input$dataFile$datapath))|
        (input$fileType == 0 & grepl("(.csv)$|(.CSV)$", input$dataFile$datapath))|
-       !grepl("(.csv)$|(.CSV)$|(.rds)$|(.RDS)$", input$dataFile$datapath)
+       !grepl("(.csv)$|(.CSV)$|(.rds)$|(.RDS)$", input$dataFile$datapath) # to moze nie potrzebne
     ){
       
       showNotification("File format doesn't match the choice!",
@@ -335,6 +335,12 @@ shinyServer(function(input, output){
         return(NULL)
       }
   })
+  
+  # uploadSHP <- reactive({
+  #   req(input$shapeFile)
+  #   
+  #   # pov_sp <- readOGR("../data/powiaty4", "powiaty", encoding = "UTF-8", stringsAsFactors = F)
+  # })
   
   # get data for table and plot
   filtered <- reactive({
@@ -403,6 +409,52 @@ shinyServer(function(input, output){
   }) 
   
   # ---------------------------- tab 1 outoputs ------------------
+  
+  output$shpPath <- DT::renderDataTable({
+    path <- input$shapeFile$datapath
+    # path <- input$dataFile$datapath
+    
+    file <- str_sub(path, nchar(path)-4, nchar(path)-4)
+    
+    # path <- 
+    # file <-
+    data.frame(t(t(file)))
+  })
+  
+  shpMap <- reactive({
+    # shpdf is a data.frame with the name, size, type and datapath
+    # of the uploaded files
+    shpdf <- input$shapeFile
+    
+    # The files are uploaded with names
+    # 0.dbf, 1.prj, 2.shp, 3.xml, 4.shx
+    # (path/names are in column datapath)
+    # We need to rename the files with the actual names:
+    # fe_2007_39_county.dbf, etc.
+    # (these are in column name)
+    
+    # Name of the temporary directory where files are uploaded
+    tempdirname <- dirname(shpdf$datapath[1])
+    
+    # Rename files
+    for (i in 1:nrow(shpdf)) {
+      file.rename(
+        shpdf$datapath[i],
+        paste0(tempdirname, "/", shpdf$name[i])
+      )
+    }
+    
+    map <- readOGR(paste(tempdirname,
+                         shpdf$name[grep(pattern = "*.shp$", shpdf$name)],
+                         sep = "/"
+    ))
+    return(map)
+  })
+  
+  
+  output$shpMap <- renderPlot({
+    plot(shpMap())
+  })
   
   
   output$contents  <- DT::renderDataTable({
