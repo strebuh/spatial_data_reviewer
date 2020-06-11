@@ -345,14 +345,14 @@ shinyServer(function(input, output){
     if(input$periodType == 0){
       # if on single year
       fitered_data1 <- data()[data()[,input$whichYearInput] == input$inputYear &
-                                data()[,input$whichNameInput] %in% if(input$areaInput=="Poland") unique(data()[,input$whichNameInput]) else input$areaInput, 
+                                data()[,input$whichNameInput] %in% if(input$areaInput=="All") unique(data()[,input$whichNameInput]) else input$areaInput, 
 
                               c(names(data())[1:3],input$variableInput)]
       return(fitered_data1)
     } else {
 
       fitered_data1 <- data()[data()[,input$whichYearInput] %in% input$inputYears[1]:input$inputYears[2] &
-                                data()[,input$whichNameInput] %in% if(input$areaInput=="Poland") unique(data()[,input$whichNameInput]) else input$areaInput, 
+                                data()[,input$whichNameInput] %in% if(input$areaInput=="All") unique(data()[,input$whichNameInput]) else input$areaInput, 
 
                               c(names(data())[1:3],input$variableInput)]
       return(fitered_data1)
