@@ -33,6 +33,13 @@ shinyUI(fluidPage(
                         # headerPanel(h3('Apply filters')),
                         sidebarPanel(width = 3,
                                      
+                                     # radioButtons("inputType", label = "Data file / shapefile",
+                                     #              choices = list("Data" = 0, "SHP" = 1), 
+                                     #              selected = 0,
+                                     #              inline= T
+                                     # ),
+                                     
+                                     # conditionalPanel(condition = "input.inputType == 0",)
                                      radioButtons("fileType", label = "Choose type of file to upload",
                                                   choices = list("RDS" = 0, "CSV" = 1), 
                                                   selected = 0,
@@ -43,11 +50,6 @@ shinyUI(fluidPage(
                                                multiple = FALSE,
                                                accept = c(".csv", ".rds", ".RDS")
                                                ),
-                                     
-                                     fileInput("shapeFile", "Choose shapefile File",
-                                               multiple = TRUE,
-                                               accept = c(".shp", ".dbs", ".shx", ".prj")
-                                     ),
                                      
                                      # choice of variable, based on variables in data
                                      uiOutput("whichYear"),
@@ -91,8 +93,6 @@ shinyUI(fluidPage(
                         mainPanel(width = 9,
                           br(),
                           tabsetPanel(type = "tabs",
-                                      tabPanel("messsges", DT::dataTableOutput("shpPath")),
-                                      tabPanel("contour", plotOutput("shpMap")),
                                       tabPanel("Uploaded", DT::dataTableOutput("contents")), # 
                                       tabPanel("Variables", DT::dataTableOutput("dataOutput")),  # DT::
                                       tabPanel("Missings", DT::dataTableOutput("missingsOutput") # DT::
@@ -111,6 +111,10 @@ shinyUI(fluidPage(
                       # pageWithSidebar(
                         # headerPanel(h3('Apply filters')),
                         sidebarPanel(width = 3,
+                                     
+                                     fileInput("shapeFile", "Choose shapefile File",
+                                               multiple = TRUE,
+                                               accept = c(".shp", ".dbs", ".shx", ".prj")),
 
                                      # choice of variable, based on variables in data
                                      uiOutput("variableOutput2"),
@@ -241,6 +245,8 @@ shinyUI(fluidPage(
                       
                       mainPanel(
                         tabsetPanel(type = "tabs",
+                                    tabPanel("messsges", DT::dataTableOutput("shpPath")),
+                                    tabPanel("contour", plotOutput("shpMap")),
                                     tabPanel("Maps", 
                                              column(12, align="center",
                                              conditionalPanel(

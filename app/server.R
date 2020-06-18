@@ -348,21 +348,21 @@ shinyServer(function(input, output){
     # # do not show anyting at the beggining, otherwise error
     req(input$variableInput)
     
-    if(input$periodType == 0){
-      # if on single year
-      fitered_data1 <- data()[data()[,input$whichYearInput] == input$inputYear &
-                                data()[,input$whichNameInput] %in% if(input$areaInput=="Poland") unique(data()[,input$whichNameInput]) else input$areaInput, 
-
-                              c(names(data())[1:3],input$variableInput)]
-      return(fitered_data1)
-    } else {
+    # if(input$periodType == 0){
+    #   # if on single year
+    #   fitered_data1 <- data()[data()[,input$whichYearInput] == input$inputYear &
+    #                             data()[,input$whichNameInput] %in% if(input$areaInput=="Poland") unique(data()[,input$whichNameInput]) else input$areaInput, 
+    # 
+    #                           c(names(data())[1:3],input$variableInput)]
+    #   return(fitered_data1)
+    # } else {
 
       fitered_data1 <- data()[data()[,input$whichYearInput] %in% input$inputYears[1]:input$inputYears[2] &
                                 data()[,input$whichNameInput] %in% if(input$areaInput=="Poland") unique(data()[,input$whichNameInput]) else input$areaInput, 
 
                               c(names(data())[1:3],input$variableInput)]
       return(fitered_data1)
-    }
+    # }
   })
   
   # function for displaying missings
@@ -371,18 +371,18 @@ shinyServer(function(input, output){
     # filter data, filtered is reactive, thus will not be null, always gets generated
     req(input$variableInput)
     
-    if(input$periodType == 0){
-      # if on single year
-      fitered_data <- data()[data()[,input$whichYearInput] == input$inputYear &
-                               data()[,input$whichNameInput] %in% if(input$areaInput=="Poland") unique(data()[,input$whichNameInput]) else input$areaInput, 
-                             c(names(data())[1:3],input$variableInput)]
-    } else {
+    # if(input$periodType == 0){
+    #   # if on single year
+    #   fitered_data <- data()[data()[,input$whichYearInput] == input$inputYear &
+    #                            data()[,input$whichNameInput] %in% if(input$areaInput=="Poland") unique(data()[,input$whichNameInput]) else input$areaInput, 
+    #                          c(names(data())[1:3],input$variableInput)]
+    # } else {
       # if range of years
       fitered_data <- data()[data()[,input$whichYearInput] %in% input$inputYears[1]:input$inputYears[2] &
                                data()[,input$whichNameInput] %in% if(input$areaInput=="Poland") unique(data()[,input$whichNameInput]) else input$areaInput, 
 
                              c(names(data())[1:3],input$variableInput)]
-    } 
+    # } 
     
     # data frame for missing values, columns-years, rows-variables
     missings = as.data.frame(matrix(NA, ncol=max(fitered_data[,input$whichYearInput])-min(fitered_data[,input$whichYearInput])+1, nrow=ncol(fitered_data)))
