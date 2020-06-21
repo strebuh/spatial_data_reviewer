@@ -1,6 +1,4 @@
-# library(plotly)
 library(shinythemes)
-# library(shinyWidgets)
 library(highcharter)
 library(shinycssloaders)
 
@@ -122,9 +120,9 @@ shinyUI(fluidPage(
                                       tabPanel("Variables", DT::dataTableOutput("dataOutput")),  # DT::
                                       tabPanel("Missings", DT::dataTableOutput("missingsOutput") # DT::
                                                )
-                                      )
-                          )
-                        ), # tab sie konczy
+                                      ) # tabset panel
+                          ) # main panel
+                        ), # tab end
              
              # -------------------------------------------------- tab 2 -------------------------------------------------  
              
@@ -149,60 +147,43 @@ shinyUI(fluidPage(
                                      uiOutput("titleOutput"),
                                      
                                      fluidRow(
-                                       column(6, 
+                                       column(3, 
                                               uiOutput("paletteOutput")
                                        ),
-                                       column(6,
+                                       column(3,
                                               br(),
                                               checkboxInput("showPalettes",
                                                             label = "Show Palettes",
                                                             value = FALSE
-                                              )
+                                                            )
+                                              ),
+                                       column(3,
+                                              br(),
+                                              # uiOutput("reverseColor")
+                                              checkboxInput("reverseColor",
+                                                            label = "Reverse color",
+                                                            value = FALSE
+                                                            )
+                                              ),
+                                       column(3,
+                                              br(),
+                                              uiOutput("staticMap")
                                        )
                                      ),
                                      
                                      uiOutput("groupingType"),
 
-                                     fluidRow(
-                                       column(6,
-                                              uiOutput("reverseColor")
-                                              ),
-                                       column(6,
-                                              uiOutput("staticMap")
-                                       )
-                                       ),
-
-
                                      # additional controls for static map, sizes of title and legend
                                      conditionalPanel(condition = "input.staticMap == true",
                                                       fluidRow(
                                                         column(4,
-                                                               numericInput("titleSize",
-                                                                           label = "Title",
-                                                                           value = 15,
-                                                                           min = 8,
-                                                                           max = 20,
-                                                                           step = 1,
-                                                                           width = "100%")
-                                                        ),
+                                                               uiOutput("titleSize")
+                                                               ),
                                                         column(4,
-                                                               numericInput("legendTitleSize",
-                                                                            label = "Legend",
-                                                                            value = 13,
-                                                                            min = 8,
-                                                                            max = 20,
-                                                                            step = 1,
-                                                                            width = "100%")
-                                                        ),
+                                                               uiOutput("legendTitleSize")
+                                                               ),
                                                         column(4,
-                                                               numericInput("legendLabelSize",
-                                                                            label = "Labels",
-                                                                            value = 12,
-                                                                            min = 8,
-                                                                            max = 20,
-                                                                            step = 1,
-                                                                            width = "100%"
-                                                                            )
+                                                               uiOutput("legendLabelSize")
                                                                )
                                                         )
                                                       ),
@@ -274,7 +255,7 @@ shinyUI(fluidPage(
                                     ) # tabPanel
                         ) # tabsetPanel
                       ) # mainPanel
-                      ), # tab sie konczy
+                      ), #  tab end
              
              # -------------------------------------------------- tab 3 -------------------------------------------------  
              
@@ -299,8 +280,8 @@ shinyUI(fluidPage(
                         
                         mainPanel(
                           withSpinner(plotOutput("plots"))
-                        )
-             ), # tab sie konczy
+                        ) # mainPanel
+             ), # tab end
              
              # -------------------------------------------------- tab 4 -------------------------------------------------  
              
@@ -341,6 +322,8 @@ shinyUI(fluidPage(
                           br(),
                           withSpinner(verbatimTextOutput("evaluation"))
                         )
-                      ) # tab sie konczy
-             )))
+                      ) #  tab end
+             ) # navbarPage
+  ) # fluidPage
+  ) # shinyUI
 
