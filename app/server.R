@@ -10,7 +10,7 @@ source("../scripts/SCATTERPLOT.R")
 source("../scripts/TOP_CORRELATIONS.R")
 source("../scripts/STEPWISE_VARS.R")
 
-options(shiny.sanitize.errors = TRUE)
+options(shiny.sanitize.errors = FALSE)
 options(shiny.maxRequestSize=70*1024^2)
 
 data <- NULL
