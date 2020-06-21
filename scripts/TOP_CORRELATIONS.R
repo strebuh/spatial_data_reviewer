@@ -1,6 +1,6 @@
-find_best_predictors = function(data_lr,y_name){
+find_best_predictors = function(data_lr,y_name, except_columns){
   
-  data_lr=data_lr[,-na.omit(match(c('Kod','Nazwa','rok','jpt_kod_je','teryt'),colnames(data_lr)))]
+  data_lr = data_lr[,-na.omit(match(except_columns, colnames(data_lr)))]
   
   to_remove = c()
   for(i in c(1:ncol(data_lr))){

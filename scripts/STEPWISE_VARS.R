@@ -1,9 +1,7 @@
-recommendation = function(data_lr,y_name){
-
-  #data_lr = data_subset
-  #y_name = 'bezrob_proc'
+recommendation = function(data_lr, y_name, except_columns){
   
-  data_lr=data_lr[,-match(c('Kod','Nazwa','rok','jpt_kod_je'),colnames(data_lr))]
+  data_lr=data_lr[,-match(except_columns, colnames(data_lr))]
+  
   
   to_remove = c()
   for(i in c(1:ncol(data_lr))){
