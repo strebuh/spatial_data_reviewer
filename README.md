@@ -37,15 +37,16 @@ Here user provides a `data file` in one of two formats  **.csv**  or **.rds** . 
 2. Checking for missing values per year and variable for given unit(s), which can be
    helpful in choosing a right variable and year for further analysis
 
+For review one can load `data06_18_contig_na_fill.RDS` file in data directory. **Spatial ID** should be selected as: **teryt**  https://github.com/superHubert/spatial_data_reviewer/blob/master/data/data06_18_contig_na_fill.RDS
 
 
-![image-20200621222326565](C:\Users\Hubert\AppData\Roaming\Typora\typora-user-images\image-20200621222326565.png)
+![1](./img/1.png)
 
 
 
 
 
-![image-20200621222345917](C:\Users\Hubert\AppData\Roaming\Typora\typora-user-images\image-20200621222345917.png)
+![2](./img/2.png)
 
 ------
 
@@ -54,6 +55,8 @@ Here user provides a `data file` in one of two formats  **.csv**  or **.rds** . 
 Here user may provide `spatial data files` (required/allowed files are: **.shp, .prj, .shx, .dbf**). 
 
 `Map` tab provided `shapefile`  spatial units are matched by **Shp units ID** input, with `Data` tab provided file elements assigned by selected **Spatial ID**. It is important to select appropriate variables, otherwise map will not be created.
+
+For review one can load `powiaty4` shapefiles in data directory. **Shp units ID** will be by defould sellected appropriately.
 
 Main features are:
 
@@ -70,35 +73,35 @@ Main features are:
 
    
 
-![image-20200621222414052](C:\Users\Hubert\AppData\Roaming\Typora\typora-user-images\image-20200621222414052.png)
+![3](./img/3.png)
 
 
 
 
 
-![image-20200621222450937](C:\Users\Hubert\AppData\Roaming\Typora\typora-user-images\image-20200621222450937.png)
+![4](./img/4.png)
 
 
 
 
 
-![image-20200621222508763](C:\Users\Hubert\AppData\Roaming\Typora\typora-user-images\image-20200621222508763.png)
+![5](./img/5.png)
 
 
 
 
 
-![image-20200621222526370](C:\Users\Hubert\AppData\Roaming\Typora\typora-user-images\image-20200621222526370.png)
+![6](./img/6.png)
 
 
 
 
 
-![image-20200621222546005](C:\Users\Hubert\AppData\Roaming\Typora\typora-user-images\image-20200621222546005.png)
+![7](./img/7.png)
 
 
 
-![image-20200621222559298](C:\Users\Hubert\AppData\Roaming\Typora\typora-user-images\image-20200621222559298.png)
+![8](./img/8.png)
 
 ------
 
@@ -114,7 +117,7 @@ Here another step into data is done, by:
 
 
 
-![image-20200621222629353](C:\Users\Hubert\AppData\Roaming\Typora\typora-user-images\image-20200621222629353.png)
+![9](./img/9.png)
 
 
 
@@ -165,7 +168,7 @@ $$
 
 
 
-![image-20200621222657898](C:\Users\Hubert\AppData\Roaming\Typora\typora-user-images\image-20200621222657898.png)
+![10](./img/10.png)
 
 
 
