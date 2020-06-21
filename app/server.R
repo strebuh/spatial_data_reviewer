@@ -21,10 +21,7 @@ pov_json_list <- NULL
 pov_sp <- NULL
 
 
-# pov_json_list <- readRDS("../data/poviaty_json_list.RDS")
-
 options(shiny.maxRequestSize=30*1024^2)
-
 
 shinyServer(function(input, output){
   
@@ -34,7 +31,6 @@ shinyServer(function(input, output){
 
   data <- reactive({
     
-    # req(input$whichYearInput)
     df <- upload()
 
     if(is.null(df)){
@@ -51,7 +47,6 @@ shinyServer(function(input, output){
         return(NULL)
       })
     }
-    
     return(df)
     })
   
@@ -63,8 +58,7 @@ shinyServer(function(input, output){
   }
   
   
-  # -------------------------------------------------- sidebar panel inputs -------------------------------------------------
-  
+  # -------------------------------------------------- tab 1 -------------------------------------------------
   # -------------------------------------------------- tab 1 -------------------------------------------------  
   
   # year column name
@@ -82,7 +76,7 @@ shinyServer(function(input, output){
                 label="Year Column",
                 choices= choices,
                 multiple = FALSE,
-                selected = "rok")
+                )
     })
                 
 
@@ -100,8 +94,8 @@ shinyServer(function(input, output){
     selectInput("whichNameInput", 
                 label="Unit name",
                 choices = choices,
-                multiple = FALSE,
-                selected = "Nazwa")
+                multiple = FALSE
+                )
   })
     
     
@@ -120,7 +114,6 @@ shinyServer(function(input, output){
                 label="Spatial ID",
                 choices = choices,
                 multiple = FALSE,
-                # selected = "jpt_kod_je"
                 )
   })
   
@@ -132,8 +125,7 @@ shinyServer(function(input, output){
     if(is.null(data)){
       return(NULL)
     } 
-    choices <- names(data)  
-    
+    choices <- c("All", names(data))  
     selectInput("variableInput", 
                 label="Variables",
                 choices = choices,
@@ -155,9 +147,9 @@ shinyServer(function(input, output){
     
     selectInput("areaInput",
                 label="Area",
-                choices = choices)
-
-  })
+                choices = choices
+                )
+    })
   
   # choose range of years
   output$yearsOutput <- renderUI({
@@ -174,9 +166,6 @@ shinyServer(function(input, output){
        (input$fileType == 0 & grepl("(.csv)$|(.CSV)$", input$dataFile$datapath))|
        !grepl("(.csv)$|(.CSV)$|(.rds)$|(.RDS)$", input$dataFile$datapath)
     ){
-      # showNotification("File format doesn't match the choice!",
-      #                  type="error",
-      #                  duration = 7)
       return(NULL)
     }
     
@@ -205,11 +194,6 @@ shinyServer(function(input, output){
   
   # MAP tab outputs
   
-  ## in observe we put code that is dependend on reactive variables needs to be reevaluated when ractive variable (input) changes
-  ## not sure if thing that data needs to be inside <- try it
-  ## reactive is similiar but let get a returned value, so uses reactive variables and it's reealuation is triggered be their changes
-  ## and also returns a values
-  
   # spatial unit identifyer in shp file
   output$whichShpID <- renderUI({
     req(input$shapeFile)
@@ -219,7 +203,6 @@ shinyServer(function(input, output){
                 choices = choices,
                 multiple = FALSE)
   })
-  
   
   # choose variable <- doesnt depend on input variable, so not in observe
   output$variableOutput2 <- renderUI({
@@ -321,7 +304,6 @@ shinyServer(function(input, output){
                   )
   })
   
-  
   output$bucketingType <- renderUI({
     req(input$shapeFile, input$dataFile)
     radioButtons("bucketingTypeInput", label = "Bucketing mode",
@@ -336,7 +318,7 @@ shinyServer(function(input, output){
   output$year <- renderUI({
     selectInput("year", 
                 label = "Choose a year",
-                choices = unique(data()[,input$whichYearInput]), # c(min(data()[,input$whichYearInput]):max(data()[,input$whichYearInput]))
+                choices = unique(data()[,input$whichYearInput]), 
                 selected = 2018)
     })
   
@@ -451,7 +433,6 @@ shinyServer(function(input, output){
                          duration = 10)
         return(NULL)
       })
-      # return(df)
     } else {
         return(NULL)
       }
@@ -469,7 +450,8 @@ shinyServer(function(input, output){
     
     years_chosen <- input$inputYears[1]:input$inputYears[2]
     units_chosen <- if(input$areaInput=="All") unique(data()[,input$whichNameInput]) else input$areaInput
-    selected_columns <- c(input$whichNameInput, input$whichSpIdInput, input$whichYearInput, input$variableInput)
+    selected_columns <- if(input$variableInput=="All") names(data()) else 
+      c(input$whichNameInput, input$whichSpIdInput, input$whichYearInput, input$variableInput)
     
     fitered_data1 <- data()[data()[,input$whichYearInput] %in% years_chosen &
                               data()[,input$whichNameInput] %in% units_chosen,
@@ -528,12 +510,6 @@ shinyServer(function(input, output){
   
   # ---------------------------- tab 1 outoputs ------------------
   
-  output$contents  <- DT::renderDataTable({
-    input$allData
-    isolate({
-      upload()
-    })
-  })
   # data output
   output$dataOutput <- DT::renderDataTable({
     input$filterData
@@ -560,20 +536,8 @@ shinyServer(function(input, output){
     breaks <- as.numeric(unlist(stringr::str_split(input$breaksInput, pattern = "\\s+")))
   })
 
-  output$shpPath <- DT::renderDataTable({
-    path <- input$shapeFile$datapath
-
-    # extract subfile names (split it)
-    file <- str_sub(path, nchar(path)-4, nchar(path)-4)
-    
-    data.frame(t(t(file)))
-  })
-  
   shpMap <- reactive({
     
-    # shiny::validate(
-    #   need(!is.null(input$dataFile) | !is.null(input$shapeFile), "Remember to upload data and shape files!")
-    # )
     req(input$shapeFile)
     # shpdf is a data.frame with the name, size, type and datapath
     # of the uploaded files
@@ -597,14 +561,9 @@ shinyServer(function(input, output){
     return(map)
   })
   
-  output$shpMap <- renderPlot({
-    plot(shpMap())
-  })
-  
   json_list_map <- reactive({
     if(is.null(pov_json_list)){
       message("Json map is being loaded.")
-      # pov_json_list <- readRDS("../data/poviaty_json_list.RDS")
       pov_json_list <- sp2geojsonList(shpMap())#
       # print(names(pov_json_list[[2]][[1]][["properties"]]))
       return(pov_json_list)
@@ -772,7 +731,6 @@ shinyServer(function(input, output){
     )
   })
   
-
   # ---------------------------- tab 2 outoputs ------------------
   
   plot1 <- eventReactive(input$filterAction2, ineractive_map())
@@ -1023,11 +981,7 @@ shinyServer(function(input, output){
                      data=data_subset,
                      listw=cont.listw)
       }
-
-      # print(class(fit))
-      
       return(fit)
-
     })
 
     recom <- reactive({
@@ -1059,7 +1013,6 @@ shinyServer(function(input, output){
       isolate({
         recom()
       })
-      
     })
 })
 

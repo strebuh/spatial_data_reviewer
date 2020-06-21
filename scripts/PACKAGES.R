@@ -9,6 +9,7 @@ library(RColorBrewer) # tab 2 | get_ggplot_map, interactive_map, tab2
 library(classInt) # tab 2 | get_ggplot_map, interactive_map
 library(broom, warn.conflicts = FALSE) # tab 2 | ggplot_map,
 
+library(geojsonio) ## to doinstalowac!!!
 library(ggplot2) # tab2 (ggplot_map), tab3, 
 library(gridExtra) # tab 3 | table grob
 # library(pdp) # tab 3 | grid.arrange() 

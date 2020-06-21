@@ -8,7 +8,8 @@ get_ggplot_map <- function(
   plot_data,                                  # frame with data (variables)
   map_sp,                                   # spatial object  - json_list (special for highcharter)
   mapped_variable,                            # index of variable for mapping (always 4) in this setting
-  joining_var = "jpt_kod_je",
+  joining_var = c(ShpId,
+                  dataSpId),
   groups_quantity = NULL,                     # nmber of groups to be created in map
   bucketing_seed = NULL,                             # seed if bclust or kmeans
   bucketing_type = "hclust",                  # bucketing algorithm
@@ -23,18 +24,18 @@ get_ggplot_map <- function(
   ...
 ){
   
-  map_df <- tidy(map_sp, region = joining_var)
+  map_df <- tidy(map_sp, region = joining_var[1])
   
   var_name <- names(plot_data)[mapped_variable]
   
   # merge data to ggplot df
-  map_df <- merge(map_df, plot_data, by.x = "id", by.y = joining_var, all.x=T)
+  map_df <- merge(map_df, plot_data, by.x = "id", by.y = joining_var[2], all.x=T)
   head(map_df)
   
   # --------------------------------------------------------------------
   
   # which variables is being mapped
-  message(paste0("Mapped varisle is: ", var_name))
+  message(paste0("Mapped varible is: ", var_name))
   
   # --------------------------------------------------------------------
   

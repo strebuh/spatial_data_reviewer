@@ -40,39 +40,14 @@ shinyUI(fluidPage(
     "))
     ),
   
-  # color: white;
-  # background: blue;
-  # font-family: 'Times New Roman', Times, serif;
-  # tags$head(
-  #   tags$style(
-  #     HTML(".shiny-notification {
-  #            position:fixed;
-  #            top: calc(50%);
-  #            left: calc(50%);
-  #            }
-  #            "
-  #     )
-  #   )
-  # ),
-  
   # upper darg green bar
   navbarPage("Spatial Data Reviewer",
              
              # -------------------------------------------------- tab 1 -------------------------------------------------  
              tabPanel("Data",
                       fluidPage(theme = shinytheme("flatly")),
-                      # tags$head(
-                      #   tags$style(HTML(".shiny-output-error-validation{color: red;}"))),
-                      
-                      # pageWithSidebar(
-                        # headerPanel(h3('Apply filters')),
+
                         sidebarPanel(width = 3,
-                                     
-                                     # radioButtons("inputType", label = "Data file / shapefile",
-                                     #              choices = list("Data" = 0, "SHP" = 1), 
-                                     #              selected = 0,
-                                     #              inline= T
-                                     # ),
                                      
                                      # conditionalPanel(condition = "input.inputType == 0",)
                                      radioButtons("fileType", label = "Choose type of file to upload",
@@ -80,27 +55,6 @@ shinyUI(fluidPage(
                                                   selected = 0,
                                                   inline= T
                                                   ),
-                                     
-                                     # fluidRow(column(6, align="center",
-                                     #                 conditionalPanel(conditon = "input.fileType == 1",
-                                     #                                  # Input: Select separator ----
-                                     #                                  radioButtons("sep", "Separator",
-                                     #                                               choices = c(Comma = ",",
-                                     #                                                           Semicolon = ";",
-                                     #                                                           Tab = "\t"),
-                                     #                                               selected = ","))
-                                     #                 ),
-                                     #          column(6, align="center",
-                                     #                 conditionalPanel(conditon = "input.fileType == 1",
-                                     #                                  # Input: Select quotes ----
-                                     #                                  radioButtons("quote", "Quote",
-                                     #                                               choices = c(None = "",
-                                     #                                                           "Double Quote" = '"',
-                                     #                                                           "Single Quote" = "'"),
-                                     #                                               selected = '"')
-                                     #                                  )
-                                     #                 )
-                                     #          ),
                                      
                                      conditionalPanel(condition = "input.fileType == 1",
                                                       fluidRow(
@@ -149,22 +103,11 @@ shinyUI(fluidPage(
                                      # choice of voivodship
                                      uiOutput("areaOutput"),
 
-                                     # # choice of whether single year or time span
-                                     # radioButtons("periodType", label = "Period Span",
-                                     #              choices = list("Single Year" = 0, "Multiple Years" = 1), 
-                                     #              selected = 0),
-                                     # 
-                                     # # based on period type choice
-                                     # conditionalPanel(condition="input.periodType == 0", 
-                                     #                  uiOutput("yearOutput")),
-                                     # conditionalPanel(condition="input.periodType == 1", 
-                                     #                  uiOutput("yearsOutput")),
                                      uiOutput("yearsOutput"),
                                      
                                      hr(),
                                      
-                                     fluidRow(column(4, align="center",
-                                                     actionButton("allData",label = "Data")),
+                                     fluidRow(
                                               column(4, align="center",
                                                      actionButton("filterData",label = "Filtered")),
                                               column(4, align="left",
@@ -176,7 +119,6 @@ shinyUI(fluidPage(
                         mainPanel(width = 9,
                           br(),
                           tabsetPanel(type = "tabs",
-                                      tabPanel("Uploaded", DT::dataTableOutput("contents")), # 
                                       tabPanel("Variables", DT::dataTableOutput("dataOutput")),  # DT::
                                       tabPanel("Missings", DT::dataTableOutput("missingsOutput") # DT::
                                                )
@@ -188,16 +130,13 @@ shinyUI(fluidPage(
              
              tabPanel("Map",
                       fluidPage(theme = shinytheme("flatly")),
-                      # tags$head(
-                      #   tags$style(HTML(".shiny-output-error-validation{color: red;}"))),
 
-                      # pageWithSidebar(
-                        # headerPanel(h3('Apply filters')),
                         sidebarPanel(width = 3,
                                      
                                      fileInput("shapeFile", "Choose shapefile File",
                                                multiple = TRUE,
-                                               accept = c(".shp", ".dbs", ".shx", ".prj", ".dbf")),
+                                               accept = c(".shp", ".dbs", ".shx", ".prj", ".dbf")
+                                               ),
                                      
                                      # choice of column which represents ID of spatial unit, in common with spation file
                                      uiOutput("whichShpID"),
@@ -223,35 +162,14 @@ shinyUI(fluidPage(
                                      ),
                                      
                                      uiOutput("groupingType"),
-                                     # conditionalPanel(condition = "output.shapeFile != 0",
-                                     #                  selectInput("groupingTypeInput",
-                                     #                              label = "Type of grouping",
-                                     #                              choices  = c("fixed", "sd", "equal", "pretty", "quantile",
-                                     #                                           "kmeans", "hclust", "bclust", "fisher", "jenks", "dpih"),
-                                     #                              selected = "pretty"),
-                                     #                  ),
-                                     # selectInput("groupingTypeInput",
-                                     #             label = "Type of grouping",
-                                     #             choices  = c("fixed", "sd", "equal", "pretty", "quantile",
-                                     #                          "kmeans", "hclust", "bclust", "fisher", "jenks", "dpih"),
-                                     #             selected = "pretty"),
-
 
                                      fluidRow(
                                        column(6,
                                               uiOutput("reverseColor")
-                                              # checkboxInput("reverseColor",
-                                              #               label = "Reverse color",
-                                              #               value = FALSE
-                                              #               )
                                               ),
                                        column(6,
                                               uiOutput("staticMap")
-                                              # checkboxInput("staticMap",
-                                              #               label = "Static Map",
-                                              #               value = F
-                                              #               )
-                                              )
+                                       )
                                        ),
 
 
@@ -292,10 +210,6 @@ shinyUI(fluidPage(
 
                                      # type of bucketing
                                      uiOutput("bucketingType"),
-                                     # radioButtons("bucketingTypeInput", label = "Bucketing mode",
-                                     #              choices = list("Automatic" = 0, "Manual" = 1),
-                                     #              selected = 0,
-                                     #              inline= T),
 
                                      # if kmeans or bclust enter seed | if not for name of kmean of bclust seet input could be here
                                      conditionalPanel(condition ="input.groupingTypeInput == 'kmeans' | input.groupingTypeInput == 'bclust'",
@@ -339,19 +253,15 @@ shinyUI(fluidPage(
                       
                       mainPanel(
                         tabsetPanel(type = "tabs",
-                                    tabPanel("messsges", DT::dataTableOutput("shpPath")),
-                                    tabPanel("contour", plotOutput("shpMap")),
                                     tabPanel("Maps", 
                                              column(12, align="center",
                                              conditionalPanel(
                                                condition = "input.staticMap == false",
-                                               # textOutput("staticMapOff"),
                                                br(),
                                                withSpinner(highchartOutput("interactiveMapOutput", height = "730px", width = "100%"))
                                              ),
                                              conditionalPanel(
                                                condition = "input.staticMap == true",
-                                               # textOutput("staticMapOn"),
                                                br(),
                                                withSpinner(plotOutput("staticMapOutput", height = "670px", width = "70%"))
                                              )
@@ -372,10 +282,6 @@ shinyUI(fluidPage(
                       
                       fluidPage(theme = shinytheme("flatly")),
                       
-                      # pageWithSidebar(
-                        
-                        # headerPanel(h3('Apply filters')),
-                        
                         sidebarPanel(
                           uiOutput("year"),
                           
@@ -394,21 +300,13 @@ shinyUI(fluidPage(
                         mainPanel(
                           withSpinner(plotOutput("plots"))
                         )
-                      # )
              ), # tab sie konczy
-             
-             # , p("This is a place for some explonation", target="_blank"), ".",style = "font-size:25px"),
-             
              
              # -------------------------------------------------- tab 4 -------------------------------------------------  
              
              tabPanel("Model",
                       
                       fluidPage(theme = shinytheme("flatly")),
-                      
-                      # pageWithSidebar(
-                        
-                        # headerPanel(h3('Apply filters')),
                         
                         sidebarPanel(width = 3,
                                      selectInput("ChosenModel", 
@@ -432,24 +330,10 @@ shinyUI(fluidPage(
                                      
                                      uiOutput("DependentVariable"),
                                      
-                                     #radioButtons("Stepwise", label = 'Choosing variables',
-                                     #choices = list("automatic" = 0, "manual" = 1), 
-                                     #selected = 1),
-                                     
-                                     #conditionalPanel(condition="input.Stepwise == 0",
-                                     #                   selectInput("IndependentVariables", 
-                                     #                               label = "Independent variables",
-                                     #                              choices = colnames(data),
-                                     #                              selected = 'kob_w_bezrob',
-                                     #                               multiple = TRUE)
-                                     #                  ),
-                                     #conditionalPanel(condition="input.Stepwise == 1", 
-                                     
                                      uiOutput("IndependentVariables"),
                                      
                                      actionButton("fitModel", label = "Fit Model")
                                      
-                                     # )
                         ),
                         
                         mainPanel(
@@ -457,8 +341,6 @@ shinyUI(fluidPage(
                           br(),
                           withSpinner(verbatimTextOutput("evaluation"))
                         )
-                      # )
-                      
-             ) # tab sie konczy
-  )))
+                      ) # tab sie konczy
+             )))
 
