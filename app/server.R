@@ -12,6 +12,7 @@ source("../scripts/PACKAGES.R")
 source("../scripts/get_static_map.R")
 source("../scripts/get_interactive_map.R")
 source("../scripts/get_ggplot_map.R")
+source("../scripts/sp2geojsonList.R")
 
 
 # input$dataFile
@@ -33,28 +34,16 @@ shinyServer(function(input, output){
 
   data <- reactive({
     
-    if(is.null(data)){
-      data <- readRDS("../data/data06_18_contig_na_fill.RDS") 
-    } else {
-      data <- upload()
-    }
-    
-    # if(is.null(data)){
-    #   showNotification("Make sure You uploaded correct file format!",
-    #                    type="error",
-    #                    duration = 7)
-    #   return(NULL)
-    # }
-    if(is.null(data)){
+    # req(input$whichYearInput)
+    df <- upload()
+
+    if(is.null(df)){
       return(NULL)
     }
     
-    # zmien nazwe zmiennej teryt, # tu wlaczyc wybieranie ktora zmienna jest wspolna
-    names(data)[which(names(data) == "teryt")] = "jpt_kod_je"
-    
-    if(is.data.table(data) | tibble::is_tibble(data)){
+    if(is.data.table(df) | tibble::is_tibble(df)){
       tryCatch({
-        data <- as.data.frame(data)
+        df <- as.data.frame(df)
       }, error = function(e) {
         showNotification("A file must readable as data.frame or data.table!",
                          type="error",
@@ -62,9 +51,17 @@ shinyServer(function(input, output){
         return(NULL)
       })
     }
-
-    return(data)
+    
+    return(df)
     })
+  
+  
+  match_data_map <- function(map, df, whichYearInput, whichSpIdInput, whichShpIdInput){
+      # reorder data
+      df <- df[match(as.character(map@data[,whichShpIdInput]), df[,whichSpIdInput]),]
+      return(df)
+  }
+  
   
   # -------------------------------------------------- sidebar panel inputs -------------------------------------------------
   
@@ -72,84 +69,104 @@ shinyServer(function(input, output){
   
   # year column name
   output$whichYear <- renderUI({
+    
     data <- data()
+    
     if(is.null(data)){
       return(NULL)
     } 
-    choices <- names(data())  
+    
+    choices <- names(data)  
+
     selectInput("whichYearInput", 
                 label="Year Column",
                 choices= choices,
-                multiple = FALSE)
+                multiple = FALSE,
+                selected = "rok")
     })
                 
 
   # spatial unit name
   output$whichName <- renderUI({
+    
     data <- data()
+    
     if(is.null(data)){
       return(NULL)
     } 
-    choices <- names(data())  
+    
+    choices <- names(data) 
+    
     selectInput("whichNameInput", 
                 label="Unit name",
                 choices = choices,
-                multiple = FALSE)
+                multiple = FALSE,
+                selected = "Nazwa")
   })
     
     
   # spatial unit identifyer
   output$whichSpID <- renderUI({
+    
     data <- data()
+    
     if(is.null(data)){
       return(NULL)
     } 
-    choices <- names(data())  
+    
+    choices <- names(data)  
+    
     selectInput("whichSpIdInput", 
                 label="Spatial ID",
                 choices = choices,
-                multiple = FALSE)
+                multiple = FALSE,
+                # selected = "jpt_kod_je"
+                )
   })
   
   # choose variable
   output$variableOutput <- renderUI({
+    
     data <- data()
+    
     if(is.null(data)){
       return(NULL)
     } 
-    choices <- names(data())  
+    choices <- names(data)  
+    
     selectInput("variableInput", 
                 label="Variables",
                 choices = choices,
                 multiple = TRUE,
-                selected = sample(choices, 3)
-    )
+                selected = sample(choices,1)
+                )
   })
   
   # choose area
   output$areaOutput <- renderUI({
+    
+    req(input$whichNameInput)
     data <- data()
+    
     if(is.null(data)){
       return(NULL)}
+    
+    choices = if(!input$whichNameInput %in% names(data)) "All" else c("All", unique(data[,input$whichNameInput]))
+    
     selectInput("areaInput",
                 label="Area",
-                choices = c("All", unique(data()[,input$whichNameInput])))
+                choices = choices)
 
   })
   
-  # # choose single year 
-  # output$yearOutput <- renderUI({
-  #   selectInput("inputYear", 
-  #               label="Year",
-  #               choices = unique(data()[,input$whichYearInput]),
-  # 
-  #               selected = 2018)
-  # }) 
-  
   # choose range of years
   output$yearsOutput <- renderUI({
+    
+    data <- data()
+    
     req(input$whichYearInput)
-    if(is.null(data())){
+    
+    if(is.null(data)){
       return(NULL)
     }
     
@@ -163,8 +180,13 @@ shinyServer(function(input, output){
       return(NULL)
     }
     
-    start_y <- min(data()[,input$whichYearInput])
-    end_y <- max(data()[,input$whichYearInput])
+    start_y <- if(!(input$whichYearInput %in% names(data))) 0 else 
+      if(!is.numeric(data[,input$whichYearInput])) 0 else 
+        min(data[,input$whichYearInput]) 
+    
+    end_y <- if(!(input$whichYearInput %in% names(data))) 0 else 
+      if(!is.numeric(data[,input$whichYearInput])) 0 else 
+        max(data[,input$whichYearInput])
     
     sliderInput("inputYears", 
                 label = "Years",
@@ -188,9 +210,20 @@ shinyServer(function(input, output){
   ## reactive is similiar but let get a returned value, so uses reactive variables and it's reealuation is triggered be their changes
   ## and also returns a values
   
+  # spatial unit identifyer in shp file
+  output$whichShpID <- renderUI({
+    req(input$shapeFile)
+    choices <- names(shpMap()@data)  
+    selectInput("whichShpIdInput", 
+                label="Shp units ID",
+                choices = choices,
+                multiple = FALSE)
+  })
+  
   
   # choose variable <- doesnt depend on input variable, so not in observe
   output$variableOutput2 <- renderUI({
+    req(input$shapeFile, input$dataFile)
     selectInput("variableInput2", 
                 label="Variable",
                 choices = names(data())[5:length(names(data()))-1])
@@ -199,6 +232,7 @@ shinyServer(function(input, output){
   
   # choose single year <- doesnt depend on input variable, so not in observe
   output$yearOutput2 <- renderUI({
+    req(input$shapeFile, input$dataFile)
     selectInput("inputYear2", 
                 label="Year",
                 selected = 2018,
@@ -208,9 +242,11 @@ shinyServer(function(input, output){
   
   # choose title
   output$titleOutput <- renderUI({
+    req(input$shapeFile, input$dataFile)
+    Title <- if(is.null(input$variableInput2) | is.null(input$inputYear2)) "" else paste("Plot of", input$variableInput2 ,"in", input$inputYear2)
     textInput("inputTitle", 
               label="Title",
-              value = paste("Plot of", input$variableInput2 ,"in", input$inputYear2)
+              value = Title
     )
   })
   
@@ -230,9 +266,18 @@ shinyServer(function(input, output){
                 choices = row.names(brewer.pal.info))
   }) 
   
+  output$groupingType <- renderUI({
+    req(input$shapeFile, input$dataFile)
+    selectInput("groupingTypeInput",
+                label = "Type of grouping",
+                choices  = c("fixed", "sd", "equal", "pretty", "quantile",
+                             "kmeans", "hclust", "bclust", "fisher", "jenks", "dpih"),
+                selected = "pretty")
+  })
   
   # select seed to bclust or kmeans
   output$seedOutput <- renderUI({
+    req(input$shapeFile, input$dataFile)
     textInput("seedInput",
               label = paste0(input$groupingTypeInput," seed"),
               value = 1)
@@ -241,6 +286,7 @@ shinyServer(function(input, output){
   
   # created text inputs for breaks, based on ranges of selected variable 
   output$fixedBreaksTexts <- renderUI({
+    req(input$shapeFile, input$dataFile)
     
     variable <- data()[data()[,input$whichYearInput] == input$inputYear2, input$variableInput2]
 
@@ -258,6 +304,33 @@ shinyServer(function(input, output){
       )
   })
   
+  
+  output$staticMap <- renderUI({
+    req(input$shapeFile, input$dataFile)
+    checkboxInput("staticMap",
+                  label = "Static Map",
+                  value = F
+                  )
+  })
+  
+  output$reverseColor <- renderUI({
+    req(input$shapeFile, input$dataFile)
+    checkboxInput("reverseColor",
+                  label = "Reverse color",
+                  value = FALSE
+                  )
+  })
+  
+  
+  output$bucketingType <- renderUI({
+    req(input$shapeFile, input$dataFile)
+    radioButtons("bucketingTypeInput", label = "Bucketing mode",
+                 choices = list("Automatic" = 0, "Manual" = 1),
+                 selected = 0,
+                 inline= T)
+  })
+  
+  
   # -------------------------------------------------- tab 3 -------------------------------------------------  
   
   output$year <- renderUI({
@@ -267,34 +340,69 @@ shinyServer(function(input, output){
                 selected = 2018)
     })
   
-  output$var <- renderUI({selectInput("var", 
-                                      label = "Choose a variable",
-                                      choices = colnames(data()),
-                                      selected = 'kob_w_bezrob')})
+  output$ExeptVar3 <- renderUI({
+    selectInput("ExeptVar3",
+                label = "Except",
+                choices = colnames(data()),
+                multiple = TRUE)
+  })
   
-  output$var2 <- renderUI({selectInput("var2",
-                                       label = "Choose another variable for scatterplot",
-                                       choices = colnames(data()),
-                                       selected = 'bezrob_proc')})
+  output$var <- renderUI({
+    
+    choices <- if(is.null(input$ExeptVar3)) colnames(data()) else 
+      colnames(data())[-match(input$ExeptVar3, colnames(data()))]
+    selectInput("var",
+                label = "Choose a variable",
+                choices = choices,
+                )
+    })
+  
+  output$var2 <- renderUI({
+    
+    choices <- if(is.null(input$ExeptVar3)) colnames(data()[-match(input$var, colnames(data()))]) else
+      colnames(data())[-match(c(input$ExeptVar3, input$var), colnames(data()))]
+    
+    selectInput("var2",
+                label = "Choose another variable for scatterplot",
+                choices = choices,
+                )})
 
-  
-  
-  
   # -------------------------------------------------- tab 4 -------------------------------------------------  
   
-  output$ChosenYear <- renderUI({selectInput("ChosenYear", 
-                                             label = "Year",
-                                             choices = unique(data()[,input$whichYearInput]),
-                                             selected = 2018)})
-  output$DependentVariable <- renderUI({selectInput("DependentVariable", 
-                                                    label = "Dependent variable",
-                                                    choices = colnames(data()),
-                                                    selected = 'kob_w_bezrob')})
-  output$IndependentVariables <- renderUI({selectInput("IndependentVariables", 
-                                                       label = "Independent variables",
-                                                       choices = colnames(data()),
-                                                       selected = "bezrob_proc",
-                                                       multiple = TRUE)})
+  output$ChosenYear <- renderUI({
+    selectInput("ChosenYear",
+                label = "Year",
+                choices = unique(data()[,input$whichYearInput]),
+                selected = 2018)
+    })
+  
+  output$ExeptVar4 <- renderUI({
+    selectInput("ExeptVar4",
+                label = "Except",
+                choices = colnames(data()),
+                multiple = TRUE)
+    })
+  
+  output$DependentVariable <- renderUI({
+    
+    choices <- if(is.null(input$ExeptVar4)) colnames(data()) else 
+      colnames(data())[-match(input$ExeptVar4, colnames(data()))]
+    
+    selectInput("DependentVariable",
+                label = "Dependent variable",
+                choices = choices)
+    })
+  
+  output$IndependentVariables <- renderUI({
+    
+    choices <- if(is.null(input$ExeptVar4)) colnames(data()[-match(input$DependentVariable, colnames(data()))]) else
+      colnames(data())[-match(c(input$ExeptVar4, input$DependentVariable), colnames(data()))]
+    
+    selectInput("IndependentVariables",
+                label = "Independent variables",
+                choices = choices,
+                multiple = TRUE)
+    })
 
   
   
@@ -314,78 +422,90 @@ shinyServer(function(input, output){
       
       showNotification("File format doesn't match the choice!",
                        type="error",
-                       duration = 7)
+                       duration = 10)
       return(NULL)
     }
     
     if(input$fileType == 0 & grepl("(.rds)$|(.RDS)$", input$dataFile$datapath)){
       
       df <- readRDS(input$dataFile$datapath)
-      
+
     } else if(input$fileType == 1 & grepl("(.csv)$|(.CSV)$", input$dataFile$datapath)){
       
-      df <- read.csv(input$dataFile$datapath,
-                     # header = input$header,
-                     # sep = input$sep,
-                     # quote = input$quote,
-                     encoding = "UTF-8",
-                     stringsAsFactors = F)
-      return(df)
+      tryCatch({
+        
+        sep <- if(input$customSep != "") input$customSep else input$sep
+
+        encoding = if(input$utf8) "UTF-8" else ""
+        
+        df <- read.csv(input$dataFile$datapath,
+                       sep = sep,
+                       dec = input$dec,
+                       encoding = encoding,
+                       stringsAsFactors = F)
+        
+      }, error = function(e) {
+        showNotification("Probably wrong separator or other CSV upload setting!
+                         Please tryanother separator.",
+                         type="error",
+                         duration = 10)
+        return(NULL)
+      })
+      # return(df)
     } else {
         return(NULL)
       }
   })
   
-  # uploadSHP <- reactive({
-  #   req(input$shapeFile)
-  #   
-  #   # pov_sp <- readOGR("../data/powiaty4", "powiaty", encoding = "UTF-8", stringsAsFactors = F)
-  # })
-  
   # get data for table and plot
   filtered <- reactive({
+    
+    shiny::validate(
+      need(!is.null(input$dataFile), "Remember to upload data file!")
+    )
     
     # # do not show anyting at the beggining, otherwise error
     req(input$variableInput)
     
-    # if(input$periodType == 0){
-    #   # if on single year
-    #   fitered_data1 <- data()[data()[,input$whichYearInput] == input$inputYear &
-    #                             data()[,input$whichNameInput] %in% if(input$areaInput=="Poland") unique(data()[,input$whichNameInput]) else input$areaInput, 
-    # 
-    #                           c(names(data())[1:3],input$variableInput)]
-    #   return(fitered_data1)
-    # } else {
-
-      fitered_data1 <- data()[data()[,input$whichYearInput] %in% input$inputYears[1]:input$inputYears[2] &
-                                data()[,input$whichNameInput] %in% if(input$areaInput=="Poland") unique(data()[,input$whichNameInput]) else input$areaInput, 
-
-                              c(names(data())[1:3],input$variableInput)]
+    years_chosen <- input$inputYears[1]:input$inputYears[2]
+    units_chosen <- if(input$areaInput=="All") unique(data()[,input$whichNameInput]) else input$areaInput
+    selected_columns <- c(input$whichNameInput, input$whichSpIdInput, input$whichYearInput, input$variableInput)
+    
+    fitered_data1 <- data()[data()[,input$whichYearInput] %in% years_chosen &
+                              data()[,input$whichNameInput] %in% units_chosen,
+                            selected_columns]
       return(fitered_data1)
     # }
   })
   
-  # function for displaying missings
+  # function for displaying missingswhichYear
   missings_df <- reactive({
+    
+    shiny::validate(
+      need(!is.null(input$dataFile), "Remember to upload data file!")
+    )
     
     # filter data, filtered is reactive, thus will not be null, always gets generated
     req(input$variableInput)
     
-    # if(input$periodType == 0){
-    #   # if on single year
-    #   fitered_data <- data()[data()[,input$whichYearInput] == input$inputYear &
-    #                            data()[,input$whichNameInput] %in% if(input$areaInput=="Poland") unique(data()[,input$whichNameInput]) else input$areaInput, 
-    #                          c(names(data())[1:3],input$variableInput)]
-    # } else {
-      # if range of years
-      fitered_data <- data()[data()[,input$whichYearInput] %in% input$inputYears[1]:input$inputYears[2] &
-                               data()[,input$whichNameInput] %in% if(input$areaInput=="Poland") unique(data()[,input$whichNameInput]) else input$areaInput, 
-
-                             c(names(data())[1:3],input$variableInput)]
-    # } 
+    years_chosen <- input$inputYears[1]:input$inputYears[2]
+    units_chosen <- if(input$areaInput=="All") unique(data()[,input$whichNameInput]) else input$areaInput
+    selected_columns <- c(input$whichNameInput, input$whichSpIdInput, input$whichYearInput, input$variableInput)
+    
+    fitered_data <- data()[data()[,input$whichYearInput] %in% years_chosen &
+                               data()[,input$whichNameInput] %in% units_chosen, 
+                           selected_columns]
     
     # data frame for missing values, columns-years, rows-variables
-    missings = as.data.frame(matrix(NA, ncol=max(fitered_data[,input$whichYearInput])-min(fitered_data[,input$whichYearInput])+1, nrow=ncol(fitered_data)))
+    start_y <- if(!is.numeric(fitered_data[,input$whichYearInput])) 0 else 
+        min(fitered_data[,input$whichYearInput]) 
+    
+    end_y <- if(!is.numeric(fitered_data[,input$whichYearInput])) 0 else 
+        max(fitered_data[,input$whichYearInput])
+    
+    # print(max(fitered_data[,input$whichYearInput]))
+    missing_n_col <- end_y - start_y + 1
+    missings = as.data.frame(matrix(NA, ncol = missing_n_col, nrow = ncol(fitered_data)))
     
     j=1
     # add number of missing values in each year for each variable 
@@ -405,57 +525,9 @@ shinyServer(function(input, output){
     rownames(missings) <- colnames(fitered_data)
     
     return(missings)
-    
-  }) 
+    }) 
   
   # ---------------------------- tab 1 outoputs ------------------
-  
-  output$shpPath <- DT::renderDataTable({
-    path <- input$shapeFile$datapath
-    # path <- input$dataFile$datapath
-    
-    file <- str_sub(path, nchar(path)-4, nchar(path)-4)
-    
-    # path <- 
-    # file <-
-    data.frame(t(t(file)))
-  })
-  
-  shpMap <- reactive({
-    # shpdf is a data.frame with the name, size, type and datapath
-    # of the uploaded files
-    shpdf <- input$shapeFile
-    
-    # The files are uploaded with names
-    # 0.dbf, 1.prj, 2.shp, 3.xml, 4.shx
-    # (path/names are in column datapath)
-    # We need to rename the files with the actual names:
-    # fe_2007_39_county.dbf, etc.
-    # (these are in column name)
-    
-    # Name of the temporary directory where files are uploaded
-    tempdirname <- dirname(shpdf$datapath[1])
-    
-    # Rename files
-    for (i in 1:nrow(shpdf)) {
-      file.rename(
-        shpdf$datapath[i],
-        paste0(tempdirname, "/", shpdf$name[i])
-      )
-    }
-    
-    map <- readOGR(paste(tempdirname,
-                         shpdf$name[grep(pattern = "*.shp$", shpdf$name)],
-                         sep = "/"
-    ))
-    return(map)
-  })
-  
-  
-  output$shpMap <- renderPlot({
-    plot(shpMap())
-  })
-  
   
   output$contents  <- DT::renderDataTable({
     input$allData
@@ -489,25 +561,65 @@ shinyServer(function(input, output){
     breaks <- as.numeric(unlist(stringr::str_split(input$breaksInput, pattern = "\\s+")))
   })
 
-  sp_map <- reactive({
-    if(is.null(pov_sp)){
-      message("Shp map is being loaded.")
-      pov_sp <- readOGR("../data/powiaty4", "powiaty", encoding = "UTF-8", stringsAsFactors = F)
-    }
+  output$shpPath <- DT::renderDataTable({
+    path <- input$shapeFile$datapath
+
+    # extract subfile names (split it)
+    file <- str_sub(path, nchar(path)-4, nchar(path)-4)
+    
+    data.frame(t(t(file)))
   })
+  
+  shpMap <- reactive({
+    
+    # shiny::validate(
+    #   need(!is.null(input$dataFile) | !is.null(input$shapeFile), "Remember to upload data and shape files!")
+    # )
+    req(input$shapeFile)
+    # shpdf is a data.frame with the name, size, type and datapath
+    # of the uploaded files
+    shpdf <- input$shapeFile
 
-
+    # Name of the temporary directory where files are uploaded
+    tempdirname <- dirname(shpdf$datapath[1])
+    
+    # Rename files
+    for (i in 1:nrow(shpdf)) {
+      file.rename(
+        shpdf$datapath[i],
+        paste0(tempdirname, "/", shpdf$name[i])
+      )
+    }
+    
+    map <- readOGR(paste(tempdirname,
+                         shpdf$name[grep(pattern = "*.shp$", shpdf$name)],
+                         sep = "/"
+                         ), encoding = "UTF-8", stringsAsFactors = F)
+    return(map)
+  })
+  
+  output$shpMap <- renderPlot({
+    plot(shpMap())
+  })
+  
   json_list_map <- reactive({
-    if(is.null(pov_sp)){
+    if(is.null(pov_json_list)){
       message("Json map is being loaded.")
-      pov_json_list <- readRDS("../data/poviaty_json_list.RDS")
+      # pov_json_list <- readRDS("../data/poviaty_json_list.RDS")
+      pov_json_list <- sp2geojsonList(shpMap())#
+      # print(names(pov_json_list[[2]][[1]][["properties"]]))
+      return(pov_json_list)
     }
   })
 
   ineractive_map <- reactive({
+    
+    shiny::validate(
+      need(!is.null(input$dataFile) | !is.null(input$shapeFile), "Remember to upload data and shape files!")
+    )
 
     # initially no variabls, so map cannot be generated, so initially empty screen
-    req(input$variableInput2)
+    req(input$variableInput2)#, input$shapeFile)
 
     if(input$groupingTypeInput == "fixed"){
 
@@ -520,9 +632,7 @@ shinyServer(function(input, output){
 
       } else {
 
-        # if fixed but manual, generate break from provided numbers
-        # else if(input$bucketingTypeInput == 0 & input$groupingTypeInput == "fixed"){
-        breaks <- fixedBreaks()
+        breaks <- fixedBreaks(shpMap())
 
         # if breaks are not correct (not numbers, that were coerced to NA) notify and NULL
         if(anyNA(breaks)){
@@ -542,11 +652,17 @@ shinyServer(function(input, output){
       }
     }
 
-    # think of replacing notify by  validate() to get information <- write funciton for these
-
     # do not show anyting at the beggining, otherwise error
     dane <- data()[data()[,input$whichYearInput] == input$inputYear2,
-                 c(names(data())[2:3], "jpt_kod_je", input$variableInput2)]
+                   c(input$whichNameInput,input$whichYearInput, input$whichSpIdInput, input$variableInput2)]
+    
+    dane <- match_data_map(shpMap(), dane, input$whichYearInput, input$whichSpIdInput, input$whichShpIdInput)
+    
+    shiny::validate(
+      need(try(all(dane[,input$whichSpIdInput] == shpMap()@data[,input$whichShpIdInput])), "Probably `Spatial ID` and `Shp units ID`
+           are not correctly specified or their values do not match each other! 
+           Make sure both files have corresponding ID variables!")
+    )
 
     # if one recalculates the map in the same session, change number of groups
     if(input$bucketingTypeInput == 1){
@@ -557,12 +673,13 @@ shinyServer(function(input, output){
 
     # read map first time function is used
     pov_json_list <- json_list_map()
-
+    
     get_interactive_map(
       plot_data = dane,                         # frame with data (variables)
       map_json = pov_json_list,                 # spatial object  - json_list (special for highcharter)
       mapped_variable = 4,                       # index of variable for mapping (always 4) in this setting
-      joining_var = "jpt_kod_je",
+      joining_var = c(input$whichShpIdInput,
+                      input$whichSpIdInput),
       groups_quantity = ngroupsInput,           # nmber of groups to be created in map
       title = input$inputTitle,                 # map title
       bucketing_seed = input$seedInput,
@@ -575,6 +692,10 @@ shinyServer(function(input, output){
 
 
   static_map <- reactive({
+    
+    shiny::validate(
+      need(!is.null(input$dataFile) | !is.null(input$shapeFile), "Remember to upload data and shape files!")
+    )
 
     # initially no variabls, so map cannot be generated, so initially empty screen
     req(input$variableInput2)
@@ -590,8 +711,6 @@ shinyServer(function(input, output){
 
       } else {
 
-        # if fixed but manual, generate break from provided numbers
-        # else if(input$bucketingTypeInput == 0 & input$groupingTypeInput == "fixed"){
         breaks <- fixedBreaks()
 
         # if breaks are not correct (not numbers, that were coerced to NA) notify and NULL
@@ -611,29 +730,36 @@ shinyServer(function(input, output){
         }
       }
     }
-
-    # think of replacing notify by  validate() to get information <- write funciton for these
     
     # do not show anyting at the beggining, otherwise error
-    dane <- data()[data()[,input$whichYearInput] == input$inputYear2, 
-                 c(names(data())[2:3], "jpt_kod_je", input$variableInput2)] 
+    dane <- data()[data()[,input$whichYearInput] == input$inputYear2,
+                   c(input$whichNameInput,input$whichYearInput, input$whichSpIdInput, input$variableInput2)]
     
-
     # if one recalculates the map in the same session, change number of groups
     if(input$bucketingTypeInput == 1){
       ngroupsInput <- input$ngroupsInput
     } else {
       ngroupsInput <- NULL
     }
-
+    
     # read map first time function is used
-    pov_sp <- sp_map()
+    shp_map <- shpMap()
+    
+    # match order of units in data and map
+    dane <- match_data_map(shp_map, dane, input$whichYearInput, input$whichSpIdInput, input$whichShpIdInput)
+    
+    shiny::validate(
+      need(try(all(dane[,input$whichSpIdInput] == shpMap()@data[,input$whichShpIdInput])), "Probably `Spatial ID` and `Shp units ID`
+           are not correctly specified or their values do not match each other! 
+           Make sure both files have corresponding ID variables!")
+    )
 
     get_ggplot_map(
         plot_data = dane,                                  # frame with data (variables)
-        map_sp = pov_sp,                                   # spatial object  - json_list (special for highcharter)
+        map_sp = shp_map,                                   # spatial object  - json_list (special for highcharter)
         mapped_variable = 4,                            # index of variable for mapping (always 4) in this setting
-        joining_var = "jpt_kod_je",
+        joining_var = c(input$whichShpIdInput,
+                        input$whichSpIdInput),
         groups_quantity = ngroupsInput,                     # nmber of groups to be created in map
         bucketing_seed = input$seedInput,                             # seed if bclust or kmeans
         bucketing_type = input$groupingTypeInput,                  # bucketing algorithm
@@ -645,34 +771,15 @@ shinyServer(function(input, output){
         legend_title_size = input$legendTitleSize,
         legend_label_size = input$legendLabelSize
     )
-
   })
   
 
   # ---------------------------- tab 2 outoputs ------------------
   
-  # --- output interactve ---
-
-  # text1 <- eventReactive(input$filterAction2, {
-  #   paste("Static map status:", input$staticMap)
-  # })
-  # output$staticMapOff <- renderText({
-  #   text1()
-  # })
-
   plot1 <- eventReactive(input$filterAction2, ineractive_map())
   output$interactiveMapOutput <- renderHighchart({
     plot1()
   })
-
-  # --- output static ---
-
-  # text2 <- eventReactive(input$filterAction3, {
-  #   paste("Static map status:", input$staticMap)
-  # })
-  # output$staticMapOn <- renderText({
-  #   text2()
-  # })
 
   plot2 <- eventReactive(input$filterAction3, static_map())
   output$staticMapOutput <- renderPlot({
@@ -737,6 +844,8 @@ shinyServer(function(input, output){
       x_upper = as.numeric(input$x_upper)
     }
     
+    tryCatch({
+      
     #adjusted histogram
     source("../scripts/HISTOGRAM.R")
     his=nice_histogram(as.data.frame(data_subset), 
@@ -779,23 +888,27 @@ shinyServer(function(input, output){
       coord_polar("y", start=0, direction=dir) +
       theme_void() +
       scale_fill_manual(values = c(col,"#00aedb")) +
-      ggtitle(paste("Moran's I for ",var1,sep='')) +
+      ggtitle(paste("Moran's I for ",var1, sep='')) +
       theme(legend.position="none") +
       theme(plot.title = element_text(hjust = 0.5)) +
       geom_text(aes(y = values+0.1, label = c('',label)), color = 'white', size=7)
     
     #finds top 10 correlated variables (considering its absolute values)
     source("../scripts/TOP_CORRELATIONS.R")
-    vars = find_best_predictors(data_subset, var1)
-    
-    #combined plot
-    combined_plot <- grid.arrange(grobs=list(his, mor, sca, mis, tableGrob(vars, rows=NULL, theme=ttheme_minimal(base_size = 10))),
-                 layout_matrix = rbind(c(1,1,2,5),
-                                       c(3,3,4,5)))
-    
-    print(class(combined_plot))
-    
-    return(combined_plot)
+      
+      vars = find_best_predictors(data_subset, var1, input$ExeptVar3)
+      
+      #combined plot
+      combined_plot <- grid.arrange(grobs=list(his, mor, sca, mis, tableGrob(vars, rows=NULL, theme=ttheme_minimal(base_size = 10))),
+                                    layout_matrix = rbind(c(1,1,2,5),
+                                                          c(3,3,4,5)))
+      
+      return(combined_plot)
+    }, error = function(e) {
+      showNotification("You might need to exempt non-quantitative columns or change file separator in Data tab.",
+                       duration = 10)
+      return(NULL)
+    })
   })
   
   
@@ -809,10 +922,10 @@ shinyServer(function(input, output){
 
 
   # -------------------------------------------------- tab 4 -------------------------------------------------
-
+  
   get_weigth_matrix <- reactive({
-    cont.nb<-poly2nb(as(sp_map(), "SpatialPolygons"))
-    cont.listw<-nb2listw(cont.nb, style="W")
+    cont.nb <- poly2nb(as(shpMap(), "SpatialPolygons"))
+    cont.listw <- nb2listw(cont.nb, style="W")
   })
   
     # prepares models formula
@@ -912,7 +1025,7 @@ shinyServer(function(input, output){
                      listw=cont.listw)
       }
 
-      print(class(fit))
+      # print(class(fit))
       
       return(fit)
 
@@ -920,17 +1033,23 @@ shinyServer(function(input, output){
 
     recom <- reactive({
       
-      req(input$ChosenYear, input$DependentVariable)
+      req(input$ChosenYear, input$DependentVariable, input$whichYearInput)
       
       data_subset = data()[data()[,input$whichYearInput]==input$ChosenYear,]
 
       source("../scripts/STEPWISE_VARS.R")
-      rec=recommendation(data_subset,input$DependentVariable)
-
-      return(rec)
+      except_columns <- input$ExeptVar4
+      tryCatch({
+        rec <- recommendation(data_subset,input$DependentVariable, except_columns)
+        rec <- paste('Recommended variables are:', paste(rec, collapse = ", "))
+        return(rec)
+      }, error = function(e) {
+        rec <- "Probably You need to exempt some non-quantitative columns like unit names, spatial IDs, year etc."
+        return(rec)
+      })
     })
 
-    #returns chosen model's summary
+    # returns chosen model's summary
     output$evaluation <- renderPrint({
       input$fitModel
       isolate(summary(fitter()))
@@ -939,16 +1058,12 @@ shinyServer(function(input, output){
     output$recommendation <- renderPrint({
       input$fitModel
       isolate({
-        paste('Recommended variables are:',paste(recom(),collapse=", "))
+        recom()
       })
       
     })
-    
-  
-  })
+})
 
-# https://datascienceplus.com/making-a-shiny-dashboard-using-highcharter-analyzing-inflation-rates/
-# https://cran.r-project.org/web/packages/rmapshaper/vignettes/rmapshaper.html
 
 
 
