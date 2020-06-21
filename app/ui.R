@@ -13,12 +13,47 @@ shinyUI(fluidPage(
   
   tags$head(
     tags$style(HTML("
+      .shiny-notification {
+        position:fixed;
+        top: calc(50%);
+        left: calc(35%);
+        font-size: 25px;
+        color: #2E695C;
+        background-color: #8CDAAE;
+      }
       .shiny-output-error-validation {
-        color: #ff0000;
+        margin-top: 25px;
+        margin-left: 50px;
+        font-size: 25px;
+        color: #449E8A;
         font-weight: bold;
       }
+        #recommendation { 
+        font-size: 20px;
+        font-weight: bold;
+        color: #40534F;
+      }
+        #evaluation { 
+        font-size: 16px;
+        font-style: italic;
+      }
     "))
-  ),
+    ),
+  
+  # color: white;
+  # background: blue;
+  # font-family: 'Times New Roman', Times, serif;
+  # tags$head(
+  #   tags$style(
+  #     HTML(".shiny-notification {
+  #            position:fixed;
+  #            top: calc(50%);
+  #            left: calc(50%);
+  #            }
+  #            "
+  #     )
+  #   )
+  # ),
   
   # upper darg green bar
   navbarPage("Spatial Data Reviewer",
@@ -33,12 +68,67 @@ shinyUI(fluidPage(
                         # headerPanel(h3('Apply filters')),
                         sidebarPanel(width = 3,
                                      
+                                     # radioButtons("inputType", label = "Data file / shapefile",
+                                     #              choices = list("Data" = 0, "SHP" = 1), 
+                                     #              selected = 0,
+                                     #              inline= T
+                                     # ),
+                                     
+                                     # conditionalPanel(condition = "input.inputType == 0",)
                                      radioButtons("fileType", label = "Choose type of file to upload",
                                                   choices = list("RDS" = 0, "CSV" = 1), 
                                                   selected = 0,
                                                   inline= T
                                                   ),
                                      
+                                     # fluidRow(column(6, align="center",
+                                     #                 conditionalPanel(conditon = "input.fileType == 1",
+                                     #                                  # Input: Select separator ----
+                                     #                                  radioButtons("sep", "Separator",
+                                     #                                               choices = c(Comma = ",",
+                                     #                                                           Semicolon = ";",
+                                     #                                                           Tab = "\t"),
+                                     #                                               selected = ","))
+                                     #                 ),
+                                     #          column(6, align="center",
+                                     #                 conditionalPanel(conditon = "input.fileType == 1",
+                                     #                                  # Input: Select quotes ----
+                                     #                                  radioButtons("quote", "Quote",
+                                     #                                               choices = c(None = "",
+                                     #                                                           "Double Quote" = '"',
+                                     #                                                           "Single Quote" = "'"),
+                                     #                                               selected = '"')
+                                     #                                  )
+                                     #                 )
+                                     #          ),
+                                     
+                                     conditionalPanel(condition = "input.fileType == 1",
+                                                      fluidRow(
+                                                        column(3, 
+                                                               # Input: Select separator ----
+                                                               radioButtons("sep", "Sep",
+                                                                            choices = c(Comma = ",",
+                                                                                        Semicolon = ";",
+                                                                                        Tab = "\t"),
+                                                                            selected = ",")
+                                                               ),
+                                                        column(3, 
+                                                               textInput("customSep", "Custom Sep")
+                                                        ),
+                                                        column(3,
+                                                               radioButtons("dec", "Dec",
+                                                                            choices = c(Dot = '.',
+                                                                                        Comma = ","),
+                                                                            selected = '.')
+                                                               ),
+                                                        column(3,
+                                                               checkboxInput("utf8", 
+                                                                             "UTF-8",
+                                                                             value = FALSE)
+                                                               )
+                                                        )
+                                                      ),
+                                              
                                      fileInput("dataFile", "Choose CSV/RDS File",
                                                multiple = FALSE,
                                                accept = c(".csv", ".rds", ".RDS")
@@ -104,6 +194,13 @@ shinyUI(fluidPage(
                       # pageWithSidebar(
                         # headerPanel(h3('Apply filters')),
                         sidebarPanel(width = 3,
+                                     
+                                     fileInput("shapeFile", "Choose shapefile File",
+                                               multiple = TRUE,
+                                               accept = c(".shp", ".dbs", ".shx", ".prj", ".dbf")),
+                                     
+                                     # choice of column which represents ID of spatial unit, in common with spation file
+                                     uiOutput("whichShpID"),
 
                                      # choice of variable, based on variables in data
                                      uiOutput("variableOutput2"),
@@ -125,28 +222,35 @@ shinyUI(fluidPage(
                                        )
                                      ),
                                      
-                                     # uiOutput("paletteOutput"),
-
-                                     selectInput("groupingTypeInput",
-                                                 label = "Type of grouping",
-                                                 choices  = c("fixed", "sd", "equal", "pretty", "quantile",
-                                                              "kmeans", "hclust", "bclust", "fisher", "jenks", "dpih"),
-                                                 selected = "pretty"),
+                                     uiOutput("groupingType"),
+                                     # conditionalPanel(condition = "output.shapeFile != 0",
+                                     #                  selectInput("groupingTypeInput",
+                                     #                              label = "Type of grouping",
+                                     #                              choices  = c("fixed", "sd", "equal", "pretty", "quantile",
+                                     #                                           "kmeans", "hclust", "bclust", "fisher", "jenks", "dpih"),
+                                     #                              selected = "pretty"),
+                                     #                  ),
+                                     # selectInput("groupingTypeInput",
+                                     #             label = "Type of grouping",
+                                     #             choices  = c("fixed", "sd", "equal", "pretty", "quantile",
+                                     #                          "kmeans", "hclust", "bclust", "fisher", "jenks", "dpih"),
+                                     #             selected = "pretty"),
 
 
                                      fluidRow(
                                        column(6,
-                                              checkboxInput("reverseColor",
-                                                            label = "Reverse color",
-                                                            value = FALSE
-                                                            # status = "success"
-                                                            )
+                                              uiOutput("reverseColor")
+                                              # checkboxInput("reverseColor",
+                                              #               label = "Reverse color",
+                                              #               value = FALSE
+                                              #               )
                                               ),
                                        column(6,
-                                              checkboxInput("staticMap",
-                                                            label = "Static Map",
-                                                            value = F
-                                                            )
+                                              uiOutput("staticMap")
+                                              # checkboxInput("staticMap",
+                                              #               label = "Static Map",
+                                              #               value = F
+                                              #               )
                                               )
                                        ),
 
@@ -187,10 +291,11 @@ shinyUI(fluidPage(
 
 
                                      # type of bucketing
-                                     radioButtons("bucketingTypeInput", label = "Bucketing mode",
-                                                  choices = list("Automatic" = 0, "Manual" = 1),
-                                                  selected = 0,
-                                                  inline= T),
+                                     uiOutput("bucketingType"),
+                                     # radioButtons("bucketingTypeInput", label = "Bucketing mode",
+                                     #              choices = list("Automatic" = 0, "Manual" = 1),
+                                     #              selected = 0,
+                                     #              inline= T),
 
                                      # if kmeans or bclust enter seed | if not for name of kmean of bclust seet input could be here
                                      conditionalPanel(condition ="input.groupingTypeInput == 'kmeans' | input.groupingTypeInput == 'bclust'",
@@ -234,6 +339,8 @@ shinyUI(fluidPage(
                       
                       mainPanel(
                         tabsetPanel(type = "tabs",
+                                    tabPanel("messsges", DT::dataTableOutput("shpPath")),
+                                    tabPanel("contour", plotOutput("shpMap")),
                                     tabPanel("Maps", 
                                              column(12, align="center",
                                              conditionalPanel(
@@ -271,6 +378,8 @@ shinyUI(fluidPage(
                         
                         sidebarPanel(
                           uiOutput("year"),
+                          
+                          uiOutput("ExeptVar3"),
 
                           uiOutput("var"),
                           
@@ -279,7 +388,7 @@ shinyUI(fluidPage(
                           sliderInput("bars", "No of bars in histogram:", min = 2, max = 100, value = 20, step = 1),
                           textInput("x_lower", label = "X-axis limit in histogram (lower):", value = ''),
                           textInput("x_upper", label = "X-asix limit in histogram (upper):", value = ''),
-                          actionButton("getAnalysis", label = "Gen Analysis")
+                          actionButton("getAnalysis", label = "Get Analysis")
                         ),
                         
                         mainPanel(
@@ -318,6 +427,8 @@ shinyUI(fluidPage(
                                                              'power: log(y)~log(x)',
                                                              'exponential: log(y)~x'),
                                                  selected = 'default: y~x'),
+                                     
+                                     uiOutput("ExeptVar4"),
                                      
                                      uiOutput("DependentVariable"),
                                      
