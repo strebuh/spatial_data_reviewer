@@ -143,27 +143,18 @@ Possible are model types are:
 Functional forms:
 
 1. **Default**
+   y ~ x
 
-$$
-y \sim x
-$$
 
 2. **Multinomial**
-   $$
-   y \sim x + x^2+x^3+x^4
-   $$
+   y ~ x + x^2+x^3+x^4
    
 
 3. **Power**
-   $$
-   log(y) \sim log(x)
-   $$
-   
+   log(y) ~ log(x)   
 
 4. **Exponential**
-   $$
-   log(y) \sim x
-   $$
+   log(y) ~ x
    
 
 
