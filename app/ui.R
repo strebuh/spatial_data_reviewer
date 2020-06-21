@@ -131,7 +131,7 @@ shinyUI(fluidPage(
 
                         sidebarPanel(width = 3,
                                      
-                                     fileInput("shapeFile", "Choose shapefile File",
+                                     fileInput("shapeFile", "Choose shp files (.shp, .prj, .shx, .dbf)",
                                                multiple = TRUE,
                                                accept = c(".shp", ".dbs", ".shx", ".prj", ".dbf")
                                                ),
@@ -159,7 +159,6 @@ shinyUI(fluidPage(
                                               ),
                                        column(3,
                                               br(),
-                                              # uiOutput("reverseColor")
                                               checkboxInput("reverseColor",
                                                             label = "Reverse color",
                                                             value = FALSE
