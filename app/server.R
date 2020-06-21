@@ -860,7 +860,7 @@ shinyServer(function(input, output){
   
   
   get_combined_plot <- eventReactive(input$getAnalysis, get_analysis_plot())
-  output$plots <- renderPrint({
+  output$plots <- renderPlot({
     get_combined_plot()
   })
   
