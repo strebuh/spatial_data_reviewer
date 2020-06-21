@@ -534,7 +534,7 @@ shinyServer(function(input, output){
         
       } else {
         
-        breaks <- fixedBreaks(shpMap())
+        breaks <- fixedBreaks()
         
         # if breaks are not correct (not numbers, that were coerced to NA) notify and NULL
         if(anyNA(breaks)){
